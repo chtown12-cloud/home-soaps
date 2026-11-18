@@ -36,6 +36,9 @@
             --shadow-deep:rgba(90,65,30,0.12);
             --focus-ring:#8b6f4e;
             --noise-opacity:0.035;
+            --warn:#a3401f;               /* safety warnings */
+            --warn-bg:#f8e6da;
+            --warn-border:#e2b49a;
         }
 
         /* ————— DARK MODE: lantern-lit apothecary ————— */
@@ -56,6 +59,9 @@
             --shadow-deep:rgba(0,0,0,0.5);
             --focus-ring:#cfaf8c;
             --noise-opacity:0.025;
+            --warn:#f0a585;
+            --warn-bg:#36221a;
+            --warn-border:#6b3f2c;
         }
 
         /* ————— CATEGORY THEMING ————— */
@@ -103,15 +109,17 @@
             border-radius:4px;
         }
 
+        /* Moved off-screen by its own height, so no sliver shows at the top of the page */
         .skip-link{
-            position:absolute;top:-40px;left:0;
+            position:absolute;top:0;left:0;
+            transform:translateY(-120%);
             background:var(--accent);color:#fff;
             padding:10px 18px;z-index:300;
             font-size:0.88rem;font-weight:500;
             border-radius:0 0 10px 0;
-            transition:top 0.2s;
+            transition:transform 0.2s;
         }
-        .skip-link:focus{ top:0 }
+        .skip-link:focus{ transform:none; }
 
         .container{
             max-width:940px;margin:0 auto;
@@ -331,33 +339,43 @@
             text-transform:uppercase;
             letter-spacing:0.12em;
         }
-        .toggle-switch{
-            display:flex;
+        /* Units: Metric / Imperial / Percent, one choice for the whole site */
+        .segmented{
+            display:grid;grid-template-columns:repeat(3,1fr);
             background:var(--hover);
             border-radius:22px;
             padding:4px;
-            width:150px;height:40px;
-            position:relative;cursor:pointer;
+            width:234px;height:40px;
+            position:relative;
         }
-        .toggle-track{
+        .segmented-thumb{
             position:absolute;
-            width:calc(50% - 4px);
+            top:4px;left:4px;
+            width:calc((100% - 8px) / 3);
             height:calc(100% - 8px);
             background:var(--primary);
             border-radius:18px;
             transition:transform 0.35s cubic-bezier(0.68,-0.35,0.265,1.35);
-            top:4px;left:4px;
         }
-        .toggle-switch.imperial .toggle-track{ transform:translateX(100%); }
-        .toggle-option{
-            flex:1;display:flex;align-items:center;justify-content:center;
+        .segmented[data-active="imperial"] .segmented-thumb{ transform:translateX(100%); }
+        .segmented[data-active="percent"] .segmented-thumb{ transform:translateX(200%); }
+        .segmented-option{
+            position:relative;z-index:1;
+            border:none;background:transparent;cursor:pointer;
+            font-family:'DM Sans',sans-serif;
             font-size:0.8rem;font-weight:500;
             color:var(--secondary);
-            position:relative;z-index:1;
+            border-radius:18px;
             transition:color 0.3s;
-            user-select:none;
         }
-        .toggle-option.active{ color:var(--background); }
+        .segmented-option.active{ color:var(--background); }
+        .segmented-option:focus-visible{ outline-offset:-2px; }
+        .units-hint{
+            text-align:center;
+            font-size:0.78rem;
+            color:var(--text-light);
+            margin-top:6px;
+        }
 
         .scale-control{ display:flex;flex-direction:column;align-items:center;gap:10px; }
         .scale-slider{
@@ -432,12 +450,14 @@
             color:var(--secondary);
         }
         .yield-info strong{
-            font-family:'Caveat',cursive;
+            font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
             font-weight:600;font-style:normal;
+            font-variant-numeric:tabular-nums;
             color:var(--accent-ink);
-            font-size:1.35rem;
+            font-size:1.05rem;
             margin-left:4px;
         }
+        .print-only{ display:none; }
 
         /* ————— INGREDIENTS ————— */
         .ingredients-section{ margin-bottom:40px; }
@@ -485,14 +505,23 @@
             color:var(--primary);
             letter-spacing:0.005em;
         }
+        /* Amounts use the body font with even-width digits, so 0.6 g never reads as 6 g */
         .ingredient-amount{
-            font-family:'Caveat',cursive;
-            font-size:1.5rem;
-            line-height:1.1;
+            font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+            font-size:1.15rem;
+            line-height:1.3;
+            font-variant-numeric:tabular-nums;
             color:var(--accent-ink);
             font-weight:600;
             margin-bottom:6px;
         }
+        .ingredient-safety{
+            display:flex;align-items:flex-start;gap:6px;
+            font-size:0.82rem;line-height:1.5;
+            color:var(--warn);
+            margin:2px 0 4px;
+        }
+        .ingredient-safety svg{ flex-shrink:0; margin-top:3px; }
         .ingredient-info{
             font-size:0.82rem;
             color:var(--text-light);
@@ -545,10 +574,14 @@
             margin-bottom:30px;
             box-shadow:0 1px 3px var(--shadow);
         }
+        .instructions-header{
+            display:flex;align-items:center;gap:12px;
+            margin-bottom:26px;
+        }
         .instructions-title{
+            flex:1;
             font-family:'Cormorant Garamond',serif;
             font-size:1.65rem;font-weight:500;
-            margin-bottom:26px;
             color:var(--primary);
             display:flex;align-items:center;gap:10px;
         }
@@ -635,6 +668,26 @@
             flex-shrink:0;color:var(--accent);
             margin-top:1px;
         }
+        .shelf-life-callout strong{ color:var(--primary); font-weight:600; }
+
+        /* ————— SAFETY ————— */
+        .callout-warn{
+            display:flex;align-items:flex-start;gap:12px;
+            background:var(--warn-bg);
+            border:1px solid var(--warn-border);
+            border-left:3px solid var(--warn);
+            border-radius:8px;
+            padding:16px 20px;
+            margin-bottom:38px;
+            font-size:0.92rem;line-height:1.6;
+            color:var(--primary);
+        }
+        .callout-warn > svg{ flex-shrink:0; color:var(--warn); margin-top:2px; }
+        .callout-warn strong{ display:block; color:var(--warn); font-weight:600; margin-bottom:4px; }
+        .callout-warn ul{ list-style:none; }
+        .callout-warn li + li{ margin-top:6px; }
+
+        .noscript{ text-align:center; color:var(--secondary); padding:40px 0; }
 
         /* ————— REDUCED MOTION ————— */
         @media (prefers-reduced-motion: reduce){
@@ -652,10 +705,18 @@
         @media print{
             body::before{ display:none !important; }
             body{ background:#fff !important; color:#000 !important; }
-            .nav-wrapper,.top-controls,.controls-card,.skip-link,.info-toggle,.header-ornament,
-            .check-btn,.clear-checks{
+            .nav-wrapper,.top-controls,.skip-link,.info-toggle,.header-ornament,
+            .check-btn,.clear-checks,.sub-tabs,.controls-row,.units-hint{
                 display:none !important;
             }
+            /* Keep the yield line (with the batch size) so a scaled printout says what it is */
+            .controls-card{
+                border:0 !important;box-shadow:none !important;background:none !important;
+                padding:0 !important;margin-bottom:24px !important;
+            }
+            .yield-info{ border-top:0 !important; margin-top:0 !important; padding-top:0 !important; }
+            .print-only{ display:inline !important; }
+            .callout-warn{ break-inside:avoid; }
             .ingredient-card.checked,.instruction-step.checked{ opacity:1 !important; }
             .ingredient-card.checked .ingredient-name{ text-decoration:none !important; }
             .ingredient-info.long{ display:block !important; }
@@ -694,6 +755,7 @@
             .sub-tabs::-webkit-scrollbar{ display:none; }
             .ingredients-grid{ grid-template-columns:1fr; }
         }
+
 
         /* ————— CHECKABLE INGREDIENTS & STEPS ————— */
         .check-btn{
@@ -737,8 +799,6 @@
             color:var(--accent-ink);
             cursor:pointer;
             padding:2px 0;
-            margin-left:12px;
-            order:1;
             flex-shrink:0;
             text-decoration:underline;
             text-underline-offset:3px;
@@ -750,6 +810,36 @@
             position:absolute;width:1px;height:1px;
             padding:0;margin:-1px;overflow:hidden;
             clip:rect(0,0,0,0);white-space:nowrap;border:0;
+        }
+
+        /* Below this width the floating buttons would cover the stuck category bar, so they scroll away instead */
+        @media (max-width:1100px){
+            .top-controls{ position:absolute; }
+        }
+
+        /* ————— PHONES: compact ingredient rows, nav scrolls away ————— */
+        @media (max-width:600px){
+            .header{ padding-top:34px; }   /* clears the theme and print buttons */
+            .nav-wrapper{ position:relative; }
+            .ingredients-grid{ display:block; }
+            .ingredient-card{
+                display:grid;
+                grid-template-columns:1fr auto;
+                column-gap:12px;
+                background:transparent;
+                border:0;border-bottom:1px solid var(--border-soft);
+                border-radius:0;
+                padding:11px 0 11px 36px;
+            }
+            .ingredient-card:hover{ transform:none; box-shadow:none; border-color:var(--border-soft); }
+            .ingredient-name{ grid-column:1; margin-bottom:0; }
+            .ingredient-amount{ grid-column:2; grid-row:1; text-align:right; margin-bottom:0; font-size:1.05rem; }
+            .ingredient-info,.ingredient-safety,.info-toggle{ grid-column:1 / -1; }
+            .ingredient-info{ font-size:0.8rem; margin-top:1px; }
+            .info-toggle{ justify-self:start; }
+            .check-btn{ top:12px; left:0; right:auto; }
+            .group-divider{ padding:14px 0 2px; margin-top:4px; }
+            .callout-warn{ padding:14px 16px; }
         }
     </style>
 </head>
@@ -803,278 +893,48 @@
         </div>
     </header>
     <nav class="nav-wrapper" id="navWrapper" aria-label="Recipe categories">
-        <div class="tabs" role="tablist" id="mainTabs">
-            <button class="tab active" role="tab" id="tab-skincare" aria-selected="true" aria-controls="skincare" tabindex="0" data-tab="skincare" onclick="switchTab('skincare', this)">
-                <svg class="tab-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 6c1.5 1.5 1.5 4.5 0 6-1.5-1.5-1.5-4.5 0-6Z"/></svg>
-                Skincare
-            </button>
-            <button class="tab" role="tab" id="tab-haircare" aria-selected="false" aria-controls="haircare" tabindex="-1" data-tab="haircare" onclick="switchTab('haircare', this)">
-                <svg class="tab-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-2 3-6 6-6 10a6 6 0 0 0 12 0c0-4-4-7-6-10Z"/><path d="M12 10v8"/></svg>
-                Hair Care
-            </button>
-            <button class="tab" role="tab" id="tab-bodycare" aria-selected="false" aria-controls="bodycare" tabindex="-1" data-tab="bodycare" onclick="switchTab('bodycare', this)">
-                <svg class="tab-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3c0 3 2 5 4 5s4-2 4-5"/><path d="M6 21c0-6 2-9 6-9s6 3 6 9"/><path d="M12 8v4"/></svg>
-                Body Care
-            </button>
-            <button class="tab" role="tab" id="tab-bathtime" aria-selected="false" aria-controls="bathtime" tabindex="-1" data-tab="bathtime" onclick="switchTab('bathtime', this)">
-                <svg class="tab-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18v3a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5v-3Z"/><path d="M7 12V6a2 2 0 0 1 4 0"/><path d="M10 5.5h2"/></svg>
-                Bath Time
-            </button>
-            <button class="tab" role="tab" id="tab-lipcare" aria-selected="false" aria-controls="lipcare" tabindex="-1" data-tab="lipcare" onclick="switchTab('lipcare', this)">
-                <svg class="tab-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11c2-3 5-4 8-4s6 1 8 4c-2 3-5 5-8 5s-6-2-8-5Z"/><path d="M8 11c1-1 2.5-1.5 4-1.5s3 .5 4 1.5"/></svg>
-                Lip Care
-            </button>
-            <button class="tab" role="tab" id="tab-soaps" aria-selected="false" aria-controls="soaps" tabindex="-1" data-tab="soaps" onclick="switchTab('soaps', this)">
-                <svg class="tab-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="10" rx="2"/><path d="M8 8c0-2 2-3 4-3s4 1 4 3"/><circle cx="10" cy="13" r="1"/></svg>
-                Soaps
-            </button>
-            <button class="tab" role="tab" id="tab-deodorants" aria-selected="false" aria-controls="deodorants" tabindex="-1" data-tab="deodorants" onclick="switchTab('deodorants', this)">
-                <svg class="tab-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="18" rx="3"/><path d="M10 3v3M14 3v3"/><path d="M9 13h6"/></svg>
-                Deodorants
-            </button>
-        </div>
+        <div class="tabs" role="tablist" id="mainTabs"></div>
     </nav>
     <main id="main-content">
-        <!-- SKINCARE TAB -->
-        <div id="skincare" class="tab-content active">
-            <div class="sub-tabs">
-                <button class="sub-tab active" role="tab" onclick="switchSubTab('skincare','claymask', this)">Clay Mask</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('skincare','toner', this)">Toner</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('skincare','serum', this)">Face Serum</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('skincare','facelotion', this)">Face Lotion</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('skincare','oilcleanser', this)">Oil Cleanser</button>
-            </div>
-            <div id="skincare-claymask" class="sub-content active"><div class="recipe-content" data-recipe="claymask"></div></div>
-            <div id="skincare-toner" class="sub-content"><div class="recipe-content" data-recipe="toner"></div></div>
-            <div id="skincare-serum" class="sub-content"><div class="recipe-content" data-recipe="serum"></div></div>
-            <div id="skincare-facelotion" class="sub-content"><div class="recipe-content" data-recipe="facelotion"></div></div>
-            <div id="skincare-oilcleanser" class="sub-content"><div class="recipe-content" data-recipe="oilcleanser"></div></div>
-        </div>
-        <!-- HAIR CARE TAB -->
-        <div id="haircare" class="tab-content">
-            <div class="sub-tabs">
-                <button class="sub-tab active" role="tab" onclick="switchSubTab('haircare','seaspray', this)">Sea Salt Spray</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('haircare','dryshampoo', this)">Dry Shampoo</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('haircare','shampoobar', this)">Shampoo Bar</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('haircare','simpleconditioner', this)">Simple Conditioner</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('haircare','btmsconditioner', this)">BTMS Conditioner</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('haircare','scalpshampoo', this)">Scalp Shampoo</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('haircare','scalpspray', this)">Scalp Spray</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('haircare','prewashoil', this)">Pre-wash Scalp Oil</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('haircare','hairmask', this)">Deep Hair Mask</button>
-            </div>
-            <div id="haircare-seaspray" class="sub-content active"><div class="recipe-content" data-recipe="seaspray"></div></div>
-            <div id="haircare-dryshampoo" class="sub-content"><div class="recipe-content" data-recipe="dryshampoo"></div></div>
-            <div id="haircare-shampoobar" class="sub-content"><div class="recipe-content" data-recipe="shampoobar"></div></div>
-            <div id="haircare-simpleconditioner" class="sub-content"><div class="recipe-content" data-recipe="simpleconditioner"></div></div>
-            <div id="haircare-btmsconditioner" class="sub-content"><div class="recipe-content" data-recipe="btmsconditioner"></div></div>
-            <div id="haircare-scalpshampoo" class="sub-content"><div class="recipe-content" data-recipe="scalpshampoo"></div></div>
-            <div id="haircare-scalpspray" class="sub-content"><div class="recipe-content" data-recipe="scalpspray"></div></div>
-            <div id="haircare-prewashoil" class="sub-content"><div class="recipe-content" data-recipe="prewashoil"></div></div>
-            <div id="haircare-hairmask" class="sub-content"><div class="recipe-content" data-recipe="hairmask"></div></div>
-        </div>
-        <!-- BODY CARE TAB -->
-        <div id="bodycare" class="tab-content">
-            <div class="sub-tabs">
-                <button class="sub-tab active" role="tab" onclick="switchSubTab('bodycare','bodybutter', this)">Body Butter</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bodycare','bodyserum', this)">Body Serum</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bodycare','sugarscrub', this)">Sugar Scrub</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bodycare','lotionbar', this)">Lotion Bar</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bodycare','handsalve', this)">Hand Salve</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bodycare','footbutter', this)">Foot Butter</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bodycare','solidperfume', this)">Solid Perfume</button>
-            </div>
-            <div id="bodycare-bodybutter" class="sub-content active"><div class="recipe-content" data-recipe="bodybutter"></div></div>
-            <div id="bodycare-bodyserum" class="sub-content"><div class="recipe-content" data-recipe="bodyserum"></div></div>
-            <div id="bodycare-sugarscrub" class="sub-content"><div class="recipe-content" data-recipe="sugarscrub"></div></div>
-            <div id="bodycare-lotionbar" class="sub-content"><div class="recipe-content" data-recipe="lotionbar"></div></div>
-            <div id="bodycare-handsalve" class="sub-content"><div class="recipe-content" data-recipe="handsalve"></div></div>
-            <div id="bodycare-footbutter" class="sub-content"><div class="recipe-content" data-recipe="footbutter"></div></div>
-            <div id="bodycare-solidperfume" class="sub-content"><div class="recipe-content" data-recipe="solidperfume"></div></div>
-        </div>
-        <!-- BATH TIME TAB -->
-        <div id="bathtime" class="tab-content">
-            <div class="sub-tabs">
-                <button class="sub-tab active" role="tab" onclick="switchSubTab('bathtime','bathbomb', this)">Bath Bombs</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bathtime','bathsalts', this)">Bath Salts</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bathtime','milkbath', this)">Milk Bath</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('bathtime','showersteamers', this)">Shower Steamers</button>
-            </div>
-            <div id="bathtime-bathbomb" class="sub-content active"><div class="recipe-content" data-recipe="bathbomb"></div></div>
-            <div id="bathtime-bathsalts" class="sub-content"><div class="recipe-content" data-recipe="bathsalts"></div></div>
-            <div id="bathtime-milkbath" class="sub-content"><div class="recipe-content" data-recipe="milkbath"></div></div>
-            <div id="bathtime-showersteamers" class="sub-content"><div class="recipe-content" data-recipe="showersteamers"></div></div>
-        </div>
-        <!-- LIP CARE TAB -->
-        <div id="lipcare" class="tab-content">
-            <div class="sub-tabs">
-                <button class="sub-tab active" role="tab" onclick="switchSubTab('lipcare','lipbalm', this)">Lip Balm</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('lipcare','lipscrub', this)">Lip Scrub</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('lipcare','tintedlipbalm', this)">Tinted Lip Balm</button>
-            </div>
-            <div id="lipcare-lipbalm" class="sub-content active"><div class="recipe-content" data-recipe="lipbalm"></div></div>
-            <div id="lipcare-lipscrub" class="sub-content"><div class="recipe-content" data-recipe="lipscrub"></div></div>
-            <div id="lipcare-tintedlipbalm" class="sub-content"><div class="recipe-content" data-recipe="tintedlipbalm"></div></div>
-        </div>
-        <!-- SOAPS TAB -->
-        <div id="soaps" class="tab-content">
-            <div class="sub-tabs">
-                <button class="sub-tab active" role="tab" onclick="switchSubTab('soaps','africansoap', this)">African Black Soap</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('soaps','shavingbar', this)">Shaving Bar</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('soaps','meltpour', this)">Melt and Pour</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('soaps','coldprocess', this)">Cold Process Bar</button>
-            </div>
-            <div id="soaps-africansoap" class="sub-content active"><div class="recipe-content" data-recipe="africansoap"></div></div>
-            <div id="soaps-shavingbar" class="sub-content"><div class="recipe-content" data-recipe="shavingbar"></div></div>
-            <div id="soaps-meltpour" class="sub-content"><div class="recipe-content" data-recipe="meltpour"></div></div>
-            <div id="soaps-coldprocess" class="sub-content"><div class="recipe-content" data-recipe="coldprocess"></div></div>
-        </div>
-        <!-- DEODORANTS TAB -->
-        <div id="deodorants" class="tab-content">
-            <div class="sub-tabs">
-                <button class="sub-tab active" role="tab" onclick="switchSubTab('deodorants','deodorant1', this)">Original</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('deodorants','deodorant2', this)">Lavender Sage</button>
-                <button class="sub-tab" role="tab" onclick="switchSubTab('deodorants','deodorant3', this)">September Fresh</button>
-            </div>
-            <div id="deodorants-deodorant1" class="sub-content active"><div class="recipe-content" data-recipe="deodorant1"></div></div>
-            <div id="deodorants-deodorant2" class="sub-content"><div class="recipe-content" data-recipe="deodorant2"></div></div>
-            <div id="deodorants-deodorant3" class="sub-content"><div class="recipe-content" data-recipe="deodorant3"></div></div>
-        </div>
+        <noscript><p class="noscript">This recipe book needs JavaScript turned on to show the recipes.</p></noscript>
     </main>
 </div>
 <script>
+// ————— Categories: tab order, labels and glyphs —————
+const CATEGORIES = [
+    { id: 'skincare',   label: 'Skincare',   glyph: '<circle cx="12" cy="12" r="8"/><path d="M12 6c1.5 1.5 1.5 4.5 0 6-1.5-1.5-1.5-4.5 0-6Z"/>' },
+    { id: 'haircare',   label: 'Hair Care',  glyph: '<path d="M12 3c-2 3-6 6-6 10a6 6 0 0 0 12 0c0-4-4-7-6-10Z"/><path d="M12 10v8"/>' },
+    { id: 'bodycare',   label: 'Body Care',  glyph: '<path d="M8 3c0 3 2 5 4 5s4-2 4-5"/><path d="M6 21c0-6 2-9 6-9s6 3 6 9"/><path d="M12 8v4"/>' },
+    { id: 'bathtime',   label: 'Bath Time',  glyph: '<path d="M3 12h18v3a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5v-3Z"/><path d="M7 12V6a2 2 0 0 1 4 0"/><path d="M10 5.5h2"/>' },
+    { id: 'lipcare',    label: 'Lip Care',   glyph: '<path d="M4 11c2-3 5-4 8-4s6 1 8 4c-2 3-5 5-8 5s-6-2-8-5Z"/><path d="M8 11c1-1 2.5-1.5 4-1.5s3 .5 4 1.5"/>' },
+    { id: 'soaps',      label: 'Soaps',      glyph: '<rect x="4" y="8" width="16" height="10" rx="2"/><path d="M8 8c0-2 2-3 4-3s4 1 4 3"/><circle cx="10" cy="13" r="1"/>' },
+    { id: 'deodorants', label: 'Deodorants', glyph: '<rect x="8" y="3" width="8" height="18" rx="3"/><path d="M10 3v3M14 3v3"/><path d="M9 13h6"/>' }
+];
+
+// ————— Recipes —————
+// Amounts are stored once: in grams (g), or as drops, capsules or pinches.
+// The imperial and percent views, and each recipe's yield, are calculated from these.
+// Optional fields: makes (count-style yield), safety (warning box), and per-ingredient
+// safety (a warning that is always visible) or asNeeded (no fixed amount).
 const recipes = {
-    scalpshampoo: {
-        name: 'Gentle Scalp Shampoo',
-        subtitle: 'For dry/flaking buzzcut · pH 5.0–5.5',
-        difficulty: 'Easy',
-        time: '15 min',
-        base: {
-            'Peppermint Hydrosol': { metric: 65, imperial: 65, unit: { metric: 'g', imperial: '%' } },
-            'Coco-Glucoside': { metric: 20, imperial: 20, unit: { metric: 'g', imperial: '%' } },
-            'Aloe Vera Gel': { metric: 5, imperial: 5, unit: { metric: 'g', imperial: '%' } },
-            'Vegetable Glycerin': { metric: 3, imperial: 3, unit: { metric: 'g', imperial: '%' } },
-            'Raw Honey': { metric: 2, imperial: 2, unit: { metric: 'g', imperial: '%' } },
-            'D-Panthenol (B5)': { metric: 2, imperial: 2, unit: { metric: 'g', imperial: '%' } },
-            'Jojoba Oil': { metric: 2, imperial: 2, unit: { metric: 'g', imperial: '%' } },
-            'Cosgard': { metric: 1, imperial: 1, unit: { metric: 'g', imperial: '%' } }
-        },
-        info: {
-            'Coco-Glucoside': 'The workhorse mild surfactant — Aroma-Zone stocks it',
-            'Vegetable Glycerin': 'Any pharmacy or health shop',
-            'Raw Honey': 'Humectant and antimicrobial — dissolve in warm hydrosol first',
-            'D-Panthenol (B5)': 'Aroma-Zone sells this as a liquid, easy to find',
-            'Aloe Vera Gel': 'Use inner-fillet type, not the green cosmetic gel',
-            'Jojoba Oil': 'Scalp-friendly, sebum-mimetic. Note: at 2% without a solubilizer it won\'t fully incorporate — give the bottle a shake before use. If that bothers you, drop it and put the jojoba in the pre-wash oil instead.',
-            'Cosgard': 'Preservative — add last'
-        },
-        sections: {},
-        batchSize: { metric: 100, imperial: 100, unit: { metric: 'g', imperial: 'g' } },
-        instructions: [
-            'Warm hydrosol to ~40°C and dissolve honey into it.',
-            'Add glycerin and aloe vera gel, stir gently.',
-            'Add coco-glucoside slowly — avoid whipping up foam.',
-            'Add panthenol and jojoba oil.',
-            'Add Cosgard last.',
-            'pH-adjust with a few drops of lemon juice or diluted citric acid.',
-            'It won\'t lather hugely — that\'s fine, glucosides clean without big foam.'
-        ],
-        tips: [
-            'Target pH: 5.0–5.5',
-            'Shake before use (jojoba may separate)',
-            'Always add Cosgard at the end, below 40°C',
-            'Shelf life: ~3 months with Cosgard. Raw honey shortens stability vs synthetic humectants — store in a cool place, discard if cloudiness or off-smell develops.'
-        ]
-    },
-    scalpspray: {
-        name: 'Scalp Hydrating Spray',
-        subtitle: 'Leave-in, daily · pH 5.5',
-        difficulty: 'Easy',
-        time: '10 min',
-        base: {
-            'Peppermint Hydrosol': { metric: 80, imperial: 80, unit: { metric: 'g', imperial: '%' } },
-            'Aloe Vera Juice': { metric: 12, imperial: 12, unit: { metric: 'g', imperial: '%' } },
-            'Vegetable Glycerin': { metric: 3, imperial: 3, unit: { metric: 'g', imperial: '%' } },
-            'D-Panthenol': { metric: 2, imperial: 2, unit: { metric: 'g', imperial: '%' } },
-            'Raw Honey': { metric: 2, imperial: 2, unit: { metric: 'g', imperial: '%' } },
-            'Cosgard': { metric: 0.6, imperial: 0.6, unit: { metric: 'g', imperial: '%' } }
-        },
-        info: {
-            'Peppermint Hydrosol': 'Quality matters — buy true steam-distilled hydrosol (single plant, distillation date on label). "Reconstituted" hydrosols (water + EO + solubiliser) smell medicinal. If the scent reads as clinical, swap half for lavender or rose geranium hydrosol.',
-            'Aloe Vera Juice': 'Use inner fillet type',
-            'Raw Honey': 'Dissolve in warm hydrosol before combining',
-            'Cosgard': 'Preservative — add last. Note: the benzyl alcohol in Cosgard has a faint clinical/almond note that can dominate a barely-scented formula. Optional: add 2–3 drops peppermint essential oil for extra tingle and to mask it (patch test first on freshly-shaved skin).'
-        },
-        sections: {},
-        batchSize: { metric: 100, imperial: 100, unit: { metric: 'g', imperial: 'g' } },
-        instructions: [
-            'Fully cold process — warm hydrosol slightly just to dissolve the honey, then cool.',
-            'Add aloe vera juice, glycerin, and panthenol.',
-            'Add Cosgard last.',
-            'Adjust pH to 5.5.',
-            'Bottle in a fine-mist spray bottle.',
-            'Shake before use. Spray onto scalp after showering, massage in, do not rinse.'
-        ],
-        tips: [
-            'Target pH: 5.5',
-            'Optional 2–3 drops peppermint EO for extra tingle — patch test first',
-            'Smells too "medical"? Usual culprits: reconstituted hydrosol or the Cosgard base note. Fixes: swap half the peppermint hydrosol for lavender or rose geranium hydrosol, or add the optional peppermint EO to dominate it.',
-            'Daily leave-in use',
-            'Shelf life: ~3 months with Cosgard. No oils means less oxidation risk, but the honey and aloe make it more perishable than a purely synthetic formula — refrigerate if you want to push closer to 4 months.'
-        ]
-    },
-    prewashoil: {
-        name: 'Pre-wash Scalp Oil',
-        subtitle: 'Weekly · apply 20 min before wash',
-        difficulty: 'Easy',
-        time: '5 min',
-        base: {
-            'Jojoba Oil': { metric: 70, imperial: 70, unit: { metric: 'g', imperial: '%' } },
-            'Squalane': { metric: 25, imperial: 25, unit: { metric: 'g', imperial: '%' } },
-            'Vitamin E': { metric: 5, imperial: 5, unit: { metric: 'g', imperial: '%' } },
-            'Rosemary CO2 Extract': { metric: 0.5, imperial: 0.5, unit: { metric: 'g', imperial: '%' } }
-        },
-        info: {
-            'Jojoba Oil': 'Olionatura and Schwatz-Katz both recommend jojoba specifically for scalp because it is sebum-mimetic and will not clog pores. Great for buzzcut winter dryness.',
-            'Rosemary CO2 Extract': 'Optional — supports scalp circulation'
-        },
-        sections: { 'Jojoba Oil': 'Oil Phase' },
-        batchSize: { metric: 100, imperial: 100, unit: { metric: 'g', imperial: 'g' } },
-        instructions: [
-            'Combine all oils in a dropper bottle.',
-            'Shake gently to blend.',
-            'Apply to dry scalp 20 minutes before washing.',
-            'Massage in, then shampoo as normal.'
-        ],
-        tips: [
-            'Weekly use',
-            'Jojoba is sebum-mimetic and non-comedogenic for scalp',
-            'Especially good for buzzcut winter dryness',
-            'Shelf life: 6–12 months. Anhydrous (no water) so no microbial risk — shelf life is limited only by oil oxidation. Vitamin E helps. Store in dark glass, away from heat.'
-        ]
-    },
     claymask: {
+        category: 'skincare',
+        tab: 'Clay Mask',
         name: 'Bentonite Clay Mask',
         subtitle: 'Deep cleansing purifying treatment',
         difficulty: 'Easy',
         time: '5 min',
-        base: {
-            'Bentonite Clay': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Aloe Vera Gel': { metric: 7.5, imperial: 0.5, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Calendula Oil': { metric: 2.5, imperial: 0.5, unit: { metric: 'g', imperial: 'tsp' } },
-            'Rosewater': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Tea Tree Essential Oil': { metric: 3, imperial: 3, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Bentonite Clay': 'Draws out impurities and toxins',
-            'Aloe Vera Gel': 'Soothing and hydrating',
-            'Calendula Oil': 'Anti-inflammatory and healing',
-            'Rosewater': 'Or use distilled water',
-            'Tea Tree Essential Oil': 'Or peppermint essential oil'
-        },
-        sections: { 'Bentonite Clay': 'Dry Ingredients', 'Rosewater': 'Wet Ingredients' },
-        batchSize: { metric: 40, imperial: 2, unit: { metric: 'g', imperial: 'applications' } },
-        instructions: [
+        makes: { count: 2, unit: 'application' },
+        ingredients: [
+            { group: 'Dry Ingredients' },
+            { name: 'Bentonite Clay', g: 15, info: 'Absorbs oil and grime as it dries' },
+            { name: 'Aloe Vera Gel', g: 7.5, info: 'Soothing and hydrating' },
+            { name: 'Calendula Oil', g: 2.5, info: 'Soothing infused oil' },
+            { group: 'Wet Ingredients' },
+            { name: 'Rosewater', g: 15, info: 'Or use distilled water' },
+            { name: 'Tea Tree Essential Oil', drops: 3, info: 'Or peppermint essential oil' },
+        ],
+        method: [
             'In a non-metal bowl, add bentonite clay.',
             'Add aloe vera gel and calendula oil.',
             'Slowly add rosewater while stirring until you achieve a smooth paste.',
@@ -1084,116 +944,101 @@ const recipes = {
             'Rinse with warm water and pat dry.',
             'Follow with toner and moisturizer.'
         ],
-        tips: [
+        notes: [
             'Can halve recipe if not planning to store',
             'Never use metal utensils with bentonite clay',
-            'Use peppermint oil for a cooling sensation',
-            'Store leftover mask in refrigerator for up to 1 week',
-            'Shelf life: 1 week refrigerated. Water + clay with no preservative — make small batches and use quickly.'
-        ]
+            'Use peppermint oil for a cooling sensation'
+        ],
+        shelfLife: '1 week refrigerated. Water + clay with no preservative — make small batches and use quickly.'
     },
     toner: {
+        category: 'skincare',
+        tab: 'Toner',
         name: 'Hydrating Toner',
         subtitle: 'Balancing and refreshing facial toner',
         difficulty: 'Easy',
         time: '5 min',
-        base: {
-            'Rosewater': { metric: 150, imperial: 10, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Witch Hazel': { metric: 120, imperial: 8, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Aloe Vera Gel': { metric: 60, imperial: 4, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Vegetable Glycerin': { metric: 38, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Cosgard': { metric: 2.2, imperial: 2.2, unit: { metric: 'g', imperial: 'g' } }
-        },
-        info: {
-            'Rosewater': 'Hydrating and soothing',
-            'Witch Hazel': 'Astringent and pore-tightening',
-            'Aloe Vera Gel': 'Healing and moisturizing',
-            'Vegetable Glycerin': 'Humectant - draws moisture',
-            'Cosgard': 'Preservative — essential in a water-based product. Add last.'
-        },
-        sections: { 'Rosewater': 'Base' },
-        batchSize: { metric: 360, imperial: 12, unit: { metric: 'g', imperial: 'oz' } },
-        instructions: [
+        ingredients: [
+            { group: 'Base' },
+            { name: 'Rosewater', g: 173, info: 'Hydrating and soothing' },
+            { name: 'Witch Hazel', g: 120, info: 'Astringent — leaves skin feeling fresh and tight' },
+            { name: 'Aloe Vera Gel', g: 60, info: 'Soothing and moisturizing' },
+            { name: 'Vegetable Glycerin', g: 15, info: 'Humectant — draws moisture. Kept to about 4% so the toner doesn\'t feel tacky.' },
+            { name: 'Cosgard', g: 2.2, info: 'Preservative — essential in a water-based product. Add last.' },
+            { name: 'Citric Acid Solution (50%)', asNeeded: true, info: 'Only if the pH reads above 5.5 — see method.' },
+        ],
+        method: [
             'Pour rosewater into a clean spray bottle or container.',
             'Add witch hazel and mix gently.',
             'Add aloe vera gel and stir until combined.',
             'Add vegetable glycerin and mix well.',
             'Add Cosgard last and shake well to combine.',
+            'Check the pH with a strip: it should read 4.5–5.5, because Cosgard loses most of its strength above pH 6. If it reads higher, add citric acid solution a drop at a time, shaking between drops, until it is in range.',
             'Apply to clean face with cotton pad or spray directly.',
             'Follow with serum and moisturizer.'
         ],
-        tips: [
+        notes: [
             'Store in refrigerator for a cooling effect',
             'Shake well before each use',
             'Want it scented? Essential oils will NOT mix into water on their own — droplets of neat EO can hit your skin. Pre-mix EO with a solubiliser (e.g. Symbiosolv Clear Plus) at 4× the EO weight before adding, or leave unscented.',
-            'Great as a setting spray for makeup',
-            'Shelf life: 2–3 months with Cosgard. Water-based, so preservative is essential. Store in a cool, dark place.'
-        ]
+            'Great as a setting spray for makeup'
+        ],
+        shelfLife: '2–3 months with Cosgard. Water-based, so preservative is essential. Store in a cool, dark place.'
     },
     serum: {
+        category: 'skincare',
+        tab: 'Face Serum',
         name: 'Hydrating Face Serum',
         subtitle: 'Lightweight moisture boost for all skin types',
         difficulty: 'Easy',
         time: '10 min',
-        base: {
-            'Aloe Vera Gel': { metric: 60, imperial: 0.25, unit: { metric: 'g', imperial: 'cup' } },
-            'Vegetable Glycerin': { metric: 38, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Jojoba Oil': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Vitamin E Capsule': { metric: 1, imperial: 1, unit: { metric: 'capsule', imperial: 'capsule' } },
-            'Cosgard': { metric: 0.6, imperial: 0.6, unit: { metric: 'g', imperial: 'g' } },
-            'Essential Oil': { metric: 4, imperial: 4, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Aloe Vera Gel': 'Hydrating base with healing properties',
-            'Vegetable Glycerin': 'Humectant that draws moisture to skin',
-            'Jojoba Oil': 'Balances skin, similar to natural sebum',
-            'Vitamin E Capsule': 'Antioxidant — slows oil oxidation. NOT a preservative; Cosgard handles the microbial side.',
-            'Cosgard': 'Preservative — essential, this is mostly water phase (aloe + glycerin). Add last.',
-            'Essential Oil': 'Lavender, chamomile, or rose recommended'
-        },
-        sections: { 'Aloe Vera Gel': 'Base', 'Essential Oil': 'Final Additions' },
-        batchSize: { metric: 100, imperial: 3, unit: { metric: 'g', imperial: 'oz' } },
-        instructions: [
+        ingredients: [
+            { group: 'Base' },
+            { name: 'Aloe Vera Gel', g: 93, info: 'Hydrating base' },
+            { name: 'Vegetable Glycerin', g: 5, info: 'Humectant that draws moisture to skin. Kept at about 5% — much more makes a serum sticky.' },
+            { name: 'Jojoba Oil', g: 5, info: 'Balances skin, similar to natural sebum' },
+            { name: 'Vitamin E Capsule', capsules: 1, info: 'Antioxidant — slows oil oxidation. NOT a preservative; Cosgard handles the microbial side.' },
+            { name: 'Cosgard', g: 0.6, info: 'Preservative — essential, this is mostly water phase (aloe + glycerin). Add last.' },
+            { name: 'Citric Acid Solution (50%)', asNeeded: true, info: 'Only if the pH reads above 5.5 — see method.' },
+            { group: 'Final Additions' },
+            { name: 'Essential Oil', drops: 4, info: 'Lavender, chamomile, or rose recommended' },
+        ],
+        method: [
             'In a small bottle, combine aloe vera gel and vegetable glycerin.',
             'Add jojoba oil and mix well by swirling.',
             'Pierce vitamin E capsule and squeeze contents into mixture.',
             'Add Cosgard and mix.',
+            'Check the pH with a strip: it should read 4.5–5.5, because Cosgard loses most of its strength above pH 6. If it reads higher, add citric acid solution a drop at a time, mixing between drops, until it is in range.',
             'Add essential oil drops of your choice.',
             'Close bottle and shake vigorously to combine.',
             'Apply 3-5 drops to clean, slightly damp face.',
             'Gently pat into skin until absorbed.',
             'Follow with moisturizer if desired.'
         ],
-        tips: [
+        notes: [
             'Perfect for layering under moisturizer',
             'Mist face with water before applying for better absorption',
-            'Great for all skin types',
-            'Store in a dark glass bottle for longer shelf life',
-            'Shelf life: 3–6 months. Cosgard preserves the water phase; store in a dark glass bottle to slow oil oxidation.'
-        ]
+            'Great for all skin types'
+        ],
+        shelfLife: '3–6 months. Cosgard preserves the water phase; store in a dark glass bottle to slow oil oxidation.'
     },
     facelotion: {
+        category: 'skincare',
+        tab: 'Face Lotion',
         name: 'Whipped Face Balm',
         subtitle: 'Anhydrous whipped moisturizer for daily use',
         difficulty: 'Medium',
         time: '25 min',
-        base: {
-            'Shea Butter': { metric: 28, imperial: 1, unit: { metric: 'g', imperial: 'oz' } },
-            'Jojoba Oil': { metric: 26, imperial: 1, unit: { metric: 'g', imperial: 'oz' } },
-            'Lavender Essential Oil': { metric: 3, imperial: 3, unit: { metric: 'drops', imperial: 'drops' } },
-            'Frankincense Essential Oil': { metric: 2, imperial: 2, unit: { metric: 'drops', imperial: 'drops' } },
-            'Clary Sage Essential Oil': { metric: 1, imperial: 1, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Shea Butter': 'Deep moisturizing base',
-            'Jojoba Oil': 'Sebum-mimetic, better facial oil than almond — and Malassezia-cautious if seb derm ever shows on face. Almond works fine if you have no fungal-acne/seb-derm concerns.',
-            'Lavender Essential Oil': 'Soothing and calming',
-            'Frankincense Essential Oil': 'Anti-aging properties',
-            'Clary Sage Essential Oil': 'Balancing'
-        },
-        sections: { 'Shea Butter': 'Base', 'Lavender Essential Oil': 'Essential Oils' },
-        batchSize: { metric: 54, imperial: 2, unit: { metric: 'g', imperial: 'oz' } },
-        instructions: [
+        ingredients: [
+            { group: 'Base' },
+            { name: 'Shea Butter', g: 28, info: 'Deep moisturizing base' },
+            { name: 'Jojoba Oil', g: 26, info: 'Sebum-mimetic, better facial oil than almond — and Malassezia-cautious if seb derm ever shows on face. Almond works fine if you have no fungal-acne/seb-derm concerns.' },
+            { group: 'Essential Oils' },
+            { name: 'Lavender Essential Oil', drops: 3, info: 'Soft floral scent' },
+            { name: 'Frankincense Essential Oil', drops: 2, info: 'Warm, resinous scent' },
+            { name: 'Clary Sage Essential Oil', drops: 1, info: 'Herbal, slightly sweet scent' },
+        ],
+        method: [
             'Melt shea butter in a double boiler until just liquid.',
             'Remove from heat and add jojoba oil, stir well.',
             'Chill until edges begin to solidify (20-30 min in fridge).',
@@ -1203,35 +1048,30 @@ const recipes = {
             'Transfer to clean jar and let set for 1 hour.',
             'Apply a small amount to clean face morning and evening — a little goes far on an anhydrous balm.'
         ],
-        tips: [
+        notes: [
             'Best applied to slightly damp skin — the balm seals the water in.',
             'Whipping is key for light, non-greasy texture',
-            'Store in cool place, will melt if too warm',
-            'Shelf life: 6+ months. Fully anhydrous — no water, no microbial risk. Limited only by oil oxidation.'
-        ]
+            'Store in cool place, will melt if too warm'
+        ],
+        shelfLife: '6+ months. Fully anhydrous — no water, no microbial risk. Limited only by oil oxidation.'
     },
     oilcleanser: {
+        category: 'skincare',
+        tab: 'Oil Cleanser',
         name: 'Hot Oil Cleanser',
         subtitle: 'Deep cleansing balm for makeup removal',
         difficulty: 'Medium',
         time: '20 min',
-        base: {
-            'Beeswax': { metric: 20, imperial: 0.7, unit: { metric: 'g', imperial: 'oz' } },
-            'Shea Butter': { metric: 30, imperial: 1, unit: { metric: 'g', imperial: 'oz' } },
-            'Avocado Oil': { metric: 18, imperial: 0.7, unit: { metric: 'g', imperial: 'oz' } },
-            'Sweet Almond Oil': { metric: 9, imperial: 0.35, unit: { metric: 'g', imperial: 'oz' } },
-            'Bentonite Clay': { metric: 10, imperial: 2, unit: { metric: 'g', imperial: 'tsp' } }
-        },
-        info: {
-            'Beeswax': 'Creates solid balm texture',
-            'Shea Butter': 'Moisturizing and protective',
-            'Avocado Oil': 'Rich in vitamins, deep cleansing',
-            'Sweet Almond Oil': 'Gentle, removes makeup',
-            'Bentonite Clay': 'Draws out impurities'
-        },
-        sections: { 'Beeswax': 'Melt Together', 'Bentonite Clay': 'Add Last' },
-        batchSize: { metric: 90, imperial: 3, unit: { metric: 'g', imperial: 'oz' } },
-        instructions: [
+        ingredients: [
+            { group: 'Melt Together' },
+            { name: 'Beeswax', g: 20, info: 'Creates solid balm texture' },
+            { name: 'Shea Butter', g: 30, info: 'Moisturizing and protective' },
+            { name: 'Avocado Oil', g: 18, info: 'Rich oil that dissolves makeup' },
+            { name: 'Sweet Almond Oil', g: 9, info: 'Gentle, removes makeup' },
+            { group: 'Add Last' },
+            { name: 'Bentonite Clay', g: 10, info: 'Absorbs excess oil' },
+        ],
+        method: [
             'Set up a double boiler with water simmering.',
             'Add beeswax and melt completely.',
             'Add shea butter and stir until melted.',
@@ -1240,76 +1080,69 @@ const recipes = {
             'Sift in bentonite clay while stirring to prevent lumps.',
             'Pour into clean jar while still liquid.',
             'Let set at room temperature for 2-3 hours.',
-            'To use: Massage onto dry face, then rinse with warm water.'
+            'To use: massage onto dry skin, then wipe it off with a muslin cloth wrung out in hot water. Rinse the cloth and repeat until your skin feels clean.'
         ],
-        tips: [
+        notes: [
             'Warm a small amount between fingers before applying',
-            'Use muslin cloth to remove for extra exfoliation',
+            'Water alone won\'t rinse it off — there is no emulsifier, and the beeswax is there to keep it firm — so the hot cloth does the removing. If you\'d rather rinse, add a rinse-off emulsifier at its supplier\'s usage rate.',
             'Follow with regular cleanser for double cleanse method',
-            'Great for removing waterproof makeup',
-            'Shelf life: 6–12 months. Anhydrous oil blend — no microbial risk, shelf life limited by oil oxidation. Store away from heat and light.'
-        ]
+            'Great for removing waterproof makeup'
+        ],
+        shelfLife: '6–12 months. Anhydrous oil blend — no microbial risk, shelf life limited by oil oxidation. Store away from heat and light.'
     },
     seaspray: {
+        category: 'haircare',
+        tab: 'Sea Salt Spray',
         name: 'Sea Salt Spray for Hair',
         subtitle: 'Beachy waves texture spray',
         difficulty: 'Easy',
         time: '10 min',
-        base: {
-            'Distilled Water': { metric: 240, imperial: 1, unit: { metric: 'g', imperial: 'cup' } },
-            'Epsom Salt': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Sea Salt': { metric: 1, imperial: 1, unit: { metric: 'pinch', imperial: 'pinch' } },
-            'Aloe Vera Gel': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Cosgard': { metric: 1.6, imperial: 1.6, unit: { metric: 'g', imperial: 'g' } },
-            'Lemon Juice': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } }
-        },
-        info: {
-            'Distilled Water': 'Steep chamomile in it only if using the batch within a week — tea bases spoil fast.',
-            'Epsom Salt': 'Creates texture and waves',
-            'Sea Salt': 'Additional texture',
-            'Aloe Vera Gel': 'Moisturizing, prevents dryness',
-            'Cosgard': 'Preservative — add last',
-            'Lemon Juice': 'For additional lightening effect'
-        },
-        sections: { 'Distilled Water': 'Base', 'Cosgard': 'Add-ins' },
-        batchSize: { metric: 268, imperial: 9, unit: { metric: 'g', imperial: 'oz' } },
-        instructions: [
+        ingredients: [
+            { group: 'Base' },
+            { name: 'Distilled Water', g: 240, info: 'Steep chamomile in it only if using the batch within a week — tea bases spoil fast.' },
+            { name: 'Epsom Salt', g: 15, info: 'Creates texture and waves' },
+            { name: 'Sea Salt', pinches: 1, info: 'Additional texture' },
+            { name: 'Aloe Vera Gel', g: 5, info: 'Moisturizing, prevents dryness' },
+            { group: 'Add-ins' },
+            { name: 'Cosgard', g: 1.6, info: 'Preservative — add last' },
+            { name: 'Lemon Juice', g: 5, info: 'For additional lightening effect' },
+            { name: 'Citric Acid Solution (50%)', asNeeded: true, info: 'Only if you skip the lemon juice — see method.' },
+        ],
+        method: [
             'Warm distilled water slightly (or brew chamomile tea if using within a week).',
             'Pour warm liquid into a spray bottle.',
             'Add Epsom salt and sea salt, shake until dissolved.',
             'Add aloe vera gel and shake well.',
             'Add lemon juice if desired for lightening.',
             'Add Cosgard last.',
+            'Check the pH with a strip: it should read 5.5 or lower, because Cosgard loses most of its strength above pH 6. The lemon juice usually takes care of this. If you skip the lemon, add citric acid solution a drop at a time until it reads 4.5–5.5.',
             'Shake well before each use.',
             'Spray onto damp or dry hair and scrunch.'
         ],
-        tips: [
+        notes: [
             'Want a conditioning boost? Pre-mix 5g jojoba with 5g solubiliser (Symbiosolv) before adding — oil will not mix into a water spray on its own.',
             'Shake well before each use',
-            'Skip lemon if you have dark hair you want to keep dark',
-            'Shelf life: 3–4 months with Cosgard. Salt adds some preservation but it is still water-based — discard if cloudy.'
-        ]
+            'Skip lemon if you have dark hair you want to keep dark'
+        ],
+        shelfLife: '3–4 months with Cosgard. Salt adds some preservation but it is still water-based — discard if cloudy.'
     },
     dryshampoo: {
+        category: 'haircare',
+        tab: 'Dry Shampoo',
         name: 'Dry Shampoo/Volumiser',
         subtitle: 'Oil-absorbing hair refresher',
         difficulty: 'Easy',
         time: '5 min',
-        base: {
-            'Arrowroot Powder': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Bentonite Clay': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Cocoa Powder': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Essential Oil': { metric: 5, imperial: 5, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Arrowroot Powder': 'Oil-absorbing base',
-            'Bentonite Clay': 'Adds volume and absorbs oil',
-            'Cocoa Powder': 'Adjust to preference for darker hair',
-            'Essential Oil': 'Lavender or peppermint recommended'
-        },
-        sections: { 'Arrowroot Powder': 'Dry Base', 'Essential Oil': 'Scent' },
-        batchSize: { metric: 35, imperial: 20, unit: { metric: 'g', imperial: 'applications' } },
-        instructions: [
+        makes: { count: 20, unit: 'application' },
+        ingredients: [
+            { group: 'Dry Base' },
+            { name: 'Arrowroot Powder', g: 15, info: 'Oil-absorbing base' },
+            { name: 'Bentonite Clay', g: 15, info: 'Adds volume and absorbs oil' },
+            { name: 'Cocoa Powder', g: 5, info: 'Adjust to preference for darker hair' },
+            { group: 'Scent' },
+            { name: 'Essential Oil', drops: 5, info: 'Lavender or peppermint recommended' },
+        ],
+        method: [
             'Combine arrowroot powder and bentonite clay in a small container.',
             'Add cocoa powder to match your hair color (more for darker hair, less for lighter).',
             'Mix dry ingredients thoroughly.',
@@ -1318,38 +1151,33 @@ const recipes = {
             'To use: Apply to roots, wait 2 minutes, then brush through.',
             'Style as usual.'
         ],
-        tips: [
+        notes: [
             'Increase cocoa powder for brunette/dark hair',
             'Skip cocoa for blonde/light hair',
             'Add activated charcoal for very dark hair',
-            'A little goes a long way',
-            'Shelf life: 6–12 months. Fully dry powder with no water — store in an airtight container away from moisture.'
-        ]
+            'A little goes a long way'
+        ],
+        shelfLife: '6–12 months. Fully dry powder with no water — store in an airtight container away from moisture.'
     },
     shampoobar: {
+        category: 'haircare',
+        tab: 'Shampoo Bar',
         name: 'Shampoo Bar',
         subtitle: 'Solid shampoo with nourishing oils',
         difficulty: 'Medium',
         time: '30 min',
-        base: {
-            'Shampoo Base': { metric: 113, imperial: 4, unit: { metric: 'g', imperial: 'oz' } },
-            'Avocado Oil': { metric: 41, imperial: 3, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Lavender Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Rosemary Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Peppermint Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Clary Sage Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Shampoo Base': 'SCI or SCS based shampoo bar base',
-            'Avocado Oil': 'Nourishing and moisturizing',
-            'Lavender Essential Oil': 'Calming, promotes hair growth',
-            'Rosemary Essential Oil': 'Stimulates scalp circulation',
-            'Peppermint Essential Oil': 'Cooling, invigorating',
-            'Clary Sage Essential Oil': 'Balances scalp oils'
-        },
-        sections: { 'Shampoo Base': 'Base', 'Lavender Essential Oil': 'Essential Oil Blend' },
-        batchSize: { metric: 158, imperial: 2, unit: { metric: 'g', imperial: 'bars' } },
-        instructions: [
+        makes: { count: 2, unit: 'bar' },
+        ingredients: [
+            { group: 'Base' },
+            { name: 'Shampoo Base', g: 113, info: 'SCI or SCS based shampoo bar base' },
+            { name: 'Avocado Oil', g: 41, info: 'Nourishing and moisturizing' },
+            { group: 'Essential Oil Blend' },
+            { name: 'Lavender Essential Oil', drops: 10, info: 'Soft floral scent' },
+            { name: 'Rosemary Essential Oil', drops: 10, info: 'Fresh, herbal scent' },
+            { name: 'Peppermint Essential Oil', drops: 10, info: 'Cooling, invigorating' },
+            { name: 'Clary Sage Essential Oil', drops: 10, info: 'Herbal, slightly sweet scent' },
+        ],
+        method: [
             'Grate or chop shampoo base into small pieces.',
             'Melt in double boiler over low heat, stirring frequently.',
             'Once melted, remove from heat.',
@@ -1360,36 +1188,32 @@ const recipes = {
             'Let set for 24 hours at room temperature.',
             'Unmold and cure for 48 hours before use.'
         ],
-        tips: [
+        notes: [
             'Work quickly as mixture sets fast',
             'Wear a mask when working with SCI powder',
             'Store bars on well-draining soap dish',
-            'Each bar lasts approximately 50-75 washes',
-            'Shelf life: 6–12 months. Solid bars with SCI base cure well and last — store on a draining dish between uses.'
-        ]
+            'Each bar lasts approximately 50-75 washes'
+        ],
+        shelfLife: '6–12 months. Solid bars with SCI base cure well and last — store on a draining dish between uses.'
     },
     simpleconditioner: {
+        category: 'haircare',
+        tab: 'Simple Conditioner',
         name: 'Simple Conditioner Bar',
         subtitle: 'Grocery store ingredients — honestly, a finishing balm bar',
         difficulty: 'Easy',
         time: '20 min',
-        base: {
-            'Cocoa Butter': { metric: 30, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Coconut Oil': { metric: 30, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Shea Butter': { metric: 20, imperial: 1.5, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Olive Oil': { metric: 14, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Cocoa Butter': 'Adds hardness and slip',
-            'Coconut Oil': 'Penetrates hair shaft',
-            'Shea Butter': 'Moisturizing',
-            'Olive Oil': 'Conditioning',
-            'Essential Oil': 'Optional fragrance'
-        },
-        sections: { 'Cocoa Butter': 'Melt Together', 'Essential Oil': 'Add When Cooled' },
-        batchSize: { metric: 94, imperial: 2, unit: { metric: 'g', imperial: 'bars' } },
-        instructions: [
+        makes: { count: 2, unit: 'bar' },
+        ingredients: [
+            { group: 'Melt Together' },
+            { name: 'Cocoa Butter', g: 30, info: 'Adds hardness and slip' },
+            { name: 'Coconut Oil', g: 30, info: 'Penetrates hair shaft' },
+            { name: 'Shea Butter', g: 20, info: 'Moisturizing' },
+            { name: 'Olive Oil', g: 14, info: 'Conditioning' },
+            { group: 'Add When Cooled' },
+            { name: 'Essential Oil', drops: 10, info: 'Optional fragrance' },
+        ],
+        method: [
             'Set up double boiler with simmering water.',
             'Add cocoa butter, coconut oil, and shea butter.',
             'Melt completely, stirring occasionally.',
@@ -1400,44 +1224,38 @@ const recipes = {
             'Refrigerate for 2 hours until solid.',
             'Store in a tin as bars are softer than commercial products.'
         ],
-        tips: [
+        notes: [
             'For shine, follow with a separate dilute ACV rinse (1 tbsp ACV in 250ml water).',
             'Honest framing: with no cationic conditioning agent (like BTMS), this is an oil balm bar, not a true conditioner. It smooths and adds shine but will not detangle or reduce static. The BTMS Conditioner Bar is the real conditioner in this collection.',
             'After shampooing, run bar lightly over wet hair ends',
-            'Softer than commercial bars - store in tin',
-            'Shelf life: 6–12 months. Solid anhydrous bar — keep dry between uses on a well-draining dish.'
-        ]
+            'Softer than commercial bars - store in tin'
+        ],
+        shelfLife: '6–12 months. Solid anhydrous bar — keep dry between uses on a well-draining dish.'
     },
     btmsconditioner: {
+        category: 'haircare',
+        tab: 'BTMS Conditioner',
         name: 'BTMS Conditioner Bar',
         subtitle: 'Professional formula with specialty ingredients',
         difficulty: 'Advanced',
         time: '45 min',
-        base: {
-            'BTMS-25': { metric: 100, imperial: 3.5, unit: { metric: 'g', imperial: 'oz' } },
-            'Cocoa Butter': { metric: 30, imperial: 1, unit: { metric: 'g', imperial: 'oz' } },
-            'Coconut Oil': { metric: 20, imperial: 0.7, unit: { metric: 'g', imperial: 'oz' } },
-            'Shea Butter': { metric: 15, imperial: 0.5, unit: { metric: 'g', imperial: 'oz' } },
-            'Cetyl Alcohol': { metric: 15, imperial: 0.5, unit: { metric: 'g', imperial: 'oz' } },
-            'Argan Oil': { metric: 10, imperial: 0.35, unit: { metric: 'g', imperial: 'oz' } },
-            'Arrowroot Powder': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Essential Oil Blend': { metric: 3, imperial: 0.1, unit: { metric: 'g', imperial: 'oz' } },
-            'Vitamin E Oil': { metric: 1, imperial: 0.5, unit: { metric: 'g', imperial: 'tsp' } }
-        },
-        info: {
-            'BTMS-25': 'Conditioning emulsifier (or BTMS-50)',
-            'Cocoa Butter': 'Adds hardness and slip',
-            'Coconut Oil': 'Penetrates hair shaft',
-            'Shea Butter': 'Moisturizing and softening',
-            'Cetyl Alcohol': 'Conditioning and thickening',
-            'Argan Oil': 'Nourishing and adds shine',
-            'Arrowroot Powder': 'Reduces greasiness',
-            'Essential Oil Blend': 'Ylang ylang, rosemary, or geranium',
-            'Vitamin E Oil': 'Antioxidant — slows oil rancidity. Not a microbial preservative (none needed: anhydrous).'
-        },
-        sections: { 'BTMS-25': 'Step 1: Melt Together', 'Cetyl Alcohol': 'Step 2: Add When Cooled to 60C', 'Arrowroot Powder': 'Step 3: Powder Phase', 'Essential Oil Blend': 'Step 4: Add Below 50C' },
-        batchSize: { metric: 200, imperial: 4, unit: { metric: 'g', imperial: 'bars' } },
-        instructions: [
+        makes: { count: 4, unit: 'bar' },
+        ingredients: [
+            { group: 'Step 1: Melt Together' },
+            { name: 'BTMS-25', g: 100, info: 'Conditioning emulsifier (or BTMS-50)' },
+            { name: 'Cocoa Butter', g: 30, info: 'Adds hardness and slip' },
+            { name: 'Coconut Oil', g: 20, info: 'Penetrates hair shaft' },
+            { name: 'Shea Butter', g: 15, info: 'Moisturizing and softening' },
+            { group: 'Step 2: Add When Cooled to 60C' },
+            { name: 'Cetyl Alcohol', g: 15, info: 'Conditioning and thickening' },
+            { name: 'Argan Oil', g: 10, info: 'Nourishing and adds shine' },
+            { group: 'Step 3: Powder Phase' },
+            { name: 'Arrowroot Powder', g: 5, info: 'Reduces greasiness' },
+            { group: 'Step 4: Add Below 50C' },
+            { name: 'Essential Oil Blend', g: 3, info: 'Ylang ylang, rosemary, or geranium' },
+            { name: 'Vitamin E Oil', g: 1, info: 'Antioxidant — slows oil rancidity. Not a microbial preservative (none needed: anhydrous).' },
+        ],
+        method: [
             'In double boiler, melt BTMS-25, cocoa butter, coconut oil, and shea butter.',
             'Stir until completely liquid and combined.',
             'Remove from heat and let cool to about 60C (140F).',
@@ -1450,33 +1268,151 @@ const recipes = {
             'Let set 24 hours at room temperature or 2-3 hours in refrigerator.',
             'Unmold and cure 48 hours before use.'
         ],
-        tips: [
+        notes: [
             'Run bar directly over wet hair from mid-length to ends',
             'Massage into hair, leave on 2-3 minutes',
             'Rinse thoroughly with warm water',
-            'BTMS-25 is key for professional results',
-            'Makes 4 bars at approximately 50g each',
-            'Shelf life: 6–12 months. Solid anhydrous bar — keep dry between uses on a well-draining dish.'
-        ]
+            'BTMS-25 is key for professional results'
+        ],
+        shelfLife: '6–12 months. Solid anhydrous bar — keep dry between uses on a well-draining dish.'
+    },
+    scalpshampoo: {
+        category: 'haircare',
+        tab: 'Scalp Shampoo',
+        name: 'Gentle Scalp Shampoo',
+        subtitle: 'For dry/flaking buzzcut · pH 5.0–5.5',
+        difficulty: 'Easy',
+        time: '15 min',
+        ingredients: [
+            { name: 'Peppermint Hydrosol', g: 65 },
+            { name: 'Coco-Glucoside', g: 20, info: 'The workhorse mild surfactant — Aroma-Zone stocks it' },
+            { name: 'Aloe Vera Gel', g: 5, info: 'Use inner-fillet type, not the green cosmetic gel' },
+            { name: 'Vegetable Glycerin', g: 3, info: 'Any pharmacy or health shop' },
+            { name: 'Raw Honey', g: 2, info: 'Humectant and antimicrobial — dissolve in warm hydrosol first' },
+            { name: 'D-Panthenol (B5)', g: 2, info: 'Aroma-Zone sells this as a liquid, easy to find' },
+            { name: 'Jojoba Oil', g: 2, info: 'Scalp-friendly, sebum-mimetic. Note: at 2% without a solubilizer it won\'t fully incorporate — give the bottle a shake before use. If that bothers you, drop it and put the jojoba in the pre-wash oil instead.' },
+            { name: 'Cosgard', g: 1, info: 'Preservative — add last' },
+            { name: 'Citric Acid Solution (50%)', asNeeded: true, info: 'For adjusting the pH. Dissolve citric acid powder in an equal weight of distilled water and keep it in a dropper bottle.' },
+        ],
+        method: [
+            'Warm hydrosol to ~40°C and dissolve honey into it.',
+            'Add glycerin and aloe vera gel, stir gently.',
+            'Add coco-glucoside slowly — avoid whipping up foam.',
+            'Add panthenol and jojoba oil.',
+            'Add Cosgard last.',
+            'Adjust the pH: add the citric acid solution a few drops at a time, stirring and checking with a pH strip, until it reads 5.0–5.5. Coco-glucoside starts out strongly alkaline, so keep going until the strip confirms it — Cosgard only protects the shampoo properly once the pH is down.',
+            'It won\'t lather hugely — that\'s fine, glucosides clean without big foam.'
+        ],
+        notes: [
+            'Target pH: 5.0–5.5',
+            'Shake before use (jojoba may separate)',
+            'Always add Cosgard at the end, below 40°C'
+        ],
+        shelfLife: '~3 months with Cosgard. Raw honey shortens stability vs synthetic humectants — store in a cool place, discard if cloudiness or off-smell develops.'
+    },
+    scalpspray: {
+        category: 'haircare',
+        tab: 'Scalp Spray',
+        name: 'Scalp Hydrating Spray',
+        subtitle: 'Leave-in, daily · pH 5.5',
+        difficulty: 'Easy',
+        time: '10 min',
+        ingredients: [
+            { name: 'Peppermint Hydrosol', g: 80, info: 'Quality matters — buy true steam-distilled hydrosol (single plant, distillation date on label). "Reconstituted" hydrosols (water + EO + solubiliser) smell medicinal. If the scent reads as clinical, swap half for lavender or rose geranium hydrosol.' },
+            { name: 'Aloe Vera Juice', g: 12, info: 'Use inner fillet type' },
+            { name: 'Vegetable Glycerin', g: 3 },
+            { name: 'D-Panthenol', g: 2 },
+            { name: 'Raw Honey', g: 2, info: 'Dissolve in warm hydrosol before combining' },
+            { name: 'Cosgard', g: 0.6, info: 'Preservative — add last. Note: the benzyl alcohol in Cosgard has a faint clinical/almond note that can dominate a barely-scented formula. Optional: add 2–3 drops peppermint essential oil for extra tingle and to mask it (patch test first on freshly-shaved skin).' },
+        ],
+        method: [
+            'Fully cold process — warm hydrosol slightly just to dissolve the honey, then cool.',
+            'Add aloe vera juice, glycerin, and panthenol.',
+            'Add Cosgard last.',
+            'Adjust pH to 5.5.',
+            'Bottle in a fine-mist spray bottle.',
+            'Shake before use. Spray onto scalp after showering, massage in, do not rinse.'
+        ],
+        notes: [
+            'Target pH: 5.5',
+            'Optional 2–3 drops peppermint EO for extra tingle — patch test first',
+            'Smells too "medical"? Usual culprits: reconstituted hydrosol or the Cosgard base note. Fixes: swap half the peppermint hydrosol for lavender or rose geranium hydrosol, or add the optional peppermint EO to dominate it.',
+            'Daily leave-in use'
+        ],
+        shelfLife: '~3 months with Cosgard. No oils means less oxidation risk, but the honey and aloe make it more perishable than a purely synthetic formula — refrigerate if you want to push closer to 4 months.'
+    },
+    prewashoil: {
+        category: 'haircare',
+        tab: 'Pre-wash Scalp Oil',
+        name: 'Pre-wash Scalp Oil',
+        subtitle: 'Weekly · apply 20 min before wash',
+        difficulty: 'Easy',
+        time: '5 min',
+        ingredients: [
+            { group: 'Oil Phase' },
+            { name: 'Jojoba Oil', g: 70, info: 'Olionatura and Schwatz-Katz both recommend jojoba specifically for scalp because it is sebum-mimetic and will not clog pores. Great for buzzcut winter dryness.' },
+            { name: 'Squalane', g: 25 },
+            { name: 'Vitamin E', g: 5 },
+            { name: 'Rosemary CO2 Extract', g: 0.5, info: 'Optional — supports scalp circulation' },
+        ],
+        method: [
+            'Combine all oils in a dropper bottle.',
+            'Shake gently to blend.',
+            'Apply to dry scalp 20 minutes before washing.',
+            'Massage in, then shampoo as normal.'
+        ],
+        notes: [
+            'Weekly use',
+            'Jojoba is sebum-mimetic and non-comedogenic for scalp',
+            'Especially good for buzzcut winter dryness'
+        ],
+        shelfLife: '6–12 months. Anhydrous (no water) so no microbial risk — shelf life is limited only by oil oxidation. Vitamin E helps. Store in dark glass, away from heat.'
+    },
+    hairmask: {
+        category: 'haircare',
+        tab: 'Deep Hair Mask',
+        name: 'Deep Conditioning Hair Mask',
+        subtitle: 'Weekly warm-oil repair treatment · single use, made fresh',
+        difficulty: 'Easy',
+        time: '15 min + 30 min on hair',
+        makes: { count: 1, unit: 'application' },
+        ingredients: [
+            { name: 'Coconut Oil', g: 30, info: 'One of the few oils proven to penetrate the hair shaft rather than just coating it' },
+            { name: 'Shea Butter', g: 20, info: 'Heavier conditioning for the lengths and ends' },
+            { name: 'Avocado Oil', g: 15, info: 'Rich in oleic acid — good penetration on porous or damaged hair' },
+            { name: 'Raw Honey', g: 15, info: 'Humectant — draws moisture into the strand. Warm gently so it blends with the oils.' },
+            { name: 'Rosemary Essential Oil', drops: 3, info: 'Optional scalp bonus' },
+        ],
+        method: [
+            'Melt the coconut oil and shea butter gently in a double boiler or a bowl set over hot water.',
+            'Remove from heat, stir in the avocado oil and honey until fully blended.',
+            'Let cool until comfortably warm to the touch — never hot.',
+            'Apply to dry hair from mid-length to ends, then work the remainder into the scalp. Comb through for even coverage.',
+            'Cover with a shower cap or warm towel and leave for 30–60 minutes.',
+            'Shampoo thoroughly — expect to need two lathers to remove the oil — then condition lightly as usual.'
+        ],
+        notes: [
+            'One batch covers shoulder-length hair — scale up for longer or thicker hair',
+            'Fine or easily-weighed-down hair: apply to lengths only, skip the scalp',
+            'Use weekly for damaged hair, every 2–3 weeks for maintenance'
+        ],
+        shelfLife: 'make fresh each time. The honey makes leftovers unstable without a preservative — mix only what you will use today.'
     },
     bodybutter: {
+        category: 'bodycare',
+        tab: 'Body Butter',
         name: 'Whipped Body Butter',
         subtitle: 'Luxuriously fluffy moisturizer',
         difficulty: 'Medium',
         time: '30 min',
-        base: {
-            'Shea Butter': { metric: 172, imperial: 6, unit: { metric: 'g', imperial: 'oz' } },
-            'Almond Oil': { metric: 37, imperial: 8, unit: { metric: 'g', imperial: 'tsp' } },
-            'Arrowroot Powder': { metric: 40, imperial: 8, unit: { metric: 'g', imperial: 'tsp' } }
-        },
-        info: {
-            'Shea Butter': 'Rich, protective moisturizer',
-            'Almond Oil': 'Light carrier oil, easily absorbed',
-            'Arrowroot Powder': 'Reduces greasy feel'
-        },
-        sections: { 'Shea Butter': 'Melt First', 'Arrowroot Powder': 'Add While Whipping' },
-        batchSize: { metric: 249, imperial: 1, unit: { metric: 'g', imperial: 'cup' } },
-        instructions: [
+        ingredients: [
+            { group: 'Melt First' },
+            { name: 'Shea Butter', g: 172, info: 'Rich, protective moisturizer' },
+            { name: 'Almond Oil', g: 37, info: 'Light carrier oil, easily absorbed' },
+            { group: 'Add While Whipping' },
+            { name: 'Arrowroot Powder', g: 40, info: 'Reduces greasy feel' },
+        ],
+        method: [
             'Melt shea butter in double boiler until just liquid.',
             'Remove from heat and add almond oil, stir well.',
             'Let cool in refrigerator until edges begin to solidify (about 30-45 min).',
@@ -1487,36 +1423,31 @@ const recipes = {
             'Let set at room temperature for 1 hour.',
             'Apply to slightly damp skin after showering — sealing in that water is what makes it feel hydrating rather than just rich.'
         ],
-        tips: [
+        notes: [
             'Add essential oils if desired during whipping',
             'Whipping is key for light texture',
             'Will melt if too warm - store in cool place',
-            'Makes great gifts',
-            'Shelf life: 6+ months. Fully anhydrous now — limited only by butter/oil rancidity. Store cool, away from light.'
-        ]
+            'Makes great gifts'
+        ],
+        shelfLife: '6+ months. Fully anhydrous — limited only by butter/oil rancidity. Store cool, away from light.'
     },
     bodyserum: {
+        category: 'bodycare',
+        tab: 'Body Serum',
         name: 'Body Serum',
         subtitle: 'Nourishing oil blend for skin',
         difficulty: 'Easy',
         time: '5 min',
-        base: {
-            'Rosehip Seed Oil': { metric: 28, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Sweet Almond Oil': { metric: 28, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Cypress Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Geranium Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Frankincense Essential Oil': { metric: 7, imperial: 7, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Rosehip Seed Oil': 'Rich in vitamins A and C, anti-aging',
-            'Sweet Almond Oil': 'Light, easily absorbed carrier',
-            'Cypress Essential Oil': 'Improves circulation',
-            'Geranium Essential Oil': 'Balancing and toning',
-            'Frankincense Essential Oil': 'Anti-aging and healing'
-        },
-        sections: { 'Rosehip Seed Oil': 'Carrier Oils', 'Cypress Essential Oil': 'Essential Oils' },
-        batchSize: { metric: 60, imperial: 2, unit: { metric: 'g', imperial: 'oz' } },
-        instructions: [
+        ingredients: [
+            { group: 'Carrier Oils' },
+            { name: 'Rosehip Seed Oil', g: 28, info: 'Light, quick-absorbing oil' },
+            { name: 'Sweet Almond Oil', g: 28, info: 'Light, easily absorbed carrier' },
+            { group: 'Essential Oils' },
+            { name: 'Cypress Essential Oil', drops: 10, info: 'Fresh, woody scent' },
+            { name: 'Geranium Essential Oil', drops: 10, info: 'Rosy, green scent' },
+            { name: 'Frankincense Essential Oil', drops: 7, info: 'Warm, resinous scent' },
+        ],
+        method: [
             'Pour rosehip seed oil into a dark glass dropper bottle.',
             'Add sweet almond oil.',
             'Add essential oils one at a time.',
@@ -1525,36 +1456,31 @@ const recipes = {
             'Apply a few drops to damp skin after shower.',
             'Massage in until absorbed.'
         ],
-        tips: [
+        notes: [
             'Store in dark glass to preserve oils',
             'Apply to damp skin for best absorption',
             'A little goes a long way',
-            'Great for dry patches and stretch marks',
-            'Shelf life: ~6 months, refrigerated. Rosehip oxidises notably fast — keep it in the fridge and treat 6 months as a ceiling, not a target. Optional: add 1% vitamin E to slow oxidation.'
-        ]
+            'Great for dry patches and stretch marks'
+        ],
+        shelfLife: '~6 months, refrigerated. Rosehip oxidises notably fast — keep it in the fridge and treat 6 months as a ceiling, not a target. Optional: add 1% vitamin E to slow oxidation.'
     },
     sugarscrub: {
+        category: 'bodycare',
+        tab: 'Sugar Scrub',
         name: 'Brown Sugar Body Scrub',
         subtitle: 'Exfoliating treatment for silky smooth skin',
         difficulty: 'Easy',
         time: '10 min',
-        base: {
-            'Brown Sugar': { metric: 200, imperial: 1, unit: { metric: 'g', imperial: 'cup' } },
-            'Coconut Oil': { metric: 110, imperial: 0.5, unit: { metric: 'g', imperial: 'cup' } },
-            'Honey': { metric: 42, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Vanilla Extract': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Brown Sugar': 'Gentle exfoliant with natural glycolic acid',
-            'Coconut Oil': 'Moisturizing and antibacterial',
-            'Honey': 'Humectant and healing',
-            'Vanilla Extract': 'Natural fragrance',
-            'Essential Oil': 'Lavender, orange, or peppermint'
-        },
-        sections: { 'Brown Sugar': 'Exfoliant Base', 'Vanilla Extract': 'Fragrance' },
-        batchSize: { metric: 365, imperial: 1.5, unit: { metric: 'g', imperial: 'cups' } },
-        instructions: [
+        ingredients: [
+            { group: 'Exfoliant Base' },
+            { name: 'Brown Sugar', g: 200, info: 'The exfoliant — it dissolves as you rinse' },
+            { name: 'Coconut Oil', g: 110, info: 'Moisturizing base that melts on skin' },
+            { name: 'Honey', g: 42, info: 'Humectant — draws in moisture' },
+            { group: 'Fragrance' },
+            { name: 'Vanilla Extract', g: 5, info: 'Natural fragrance' },
+            { name: 'Essential Oil', drops: 10, info: 'Lavender, orange, or peppermint' },
+        ],
+        method: [
             'Gently melt coconut oil in a double boiler until just liquid.',
             'In mixing bowl, combine brown sugar and honey.',
             'Pour warm coconut oil over sugar mixture.',
@@ -1564,34 +1490,30 @@ const recipes = {
             'To use: Apply to damp skin in circular motions.',
             'Rinse thoroughly and pat dry.'
         ],
-        tips: [
+        notes: [
             'Use 2-3 times per week',
             'Not recommended for face - too abrasive',
-            'Rinse tub well after use to prevent slipping',
-            'Lasts 2-3 months stored properly',
-            'Shelf life: 3–6 months. Oil-based with no water, but sugar can introduce moisture during use — use dry hands and keep the lid on.'
-        ]
+            'Rinse tub well after use to prevent slipping'
+        ],
+        shelfLife: '2–3 months. Low-water rather than water-free: honey can be up to 20% water, and shower splashes get into the jar. Scoop with a dry spoon and keep the lid on.'
     },
     lotionbar: {
+        category: 'bodycare',
+        tab: 'Lotion Bar',
         name: 'Solid Lotion Bar',
         subtitle: 'Portable, mess-free moisturizer',
         difficulty: 'Medium',
         time: '25 min',
-        base: {
-            'Beeswax': { metric: 30, imperial: 1, unit: { metric: 'g', imperial: 'oz' } },
-            'Coconut Oil': { metric: 30, imperial: 1, unit: { metric: 'g', imperial: 'oz' } },
-            'Shea Butter': { metric: 30, imperial: 1, unit: { metric: 'g', imperial: 'oz' } },
-            'Essential Oil': { metric: 20, imperial: 20, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Beeswax': 'Creates solid bar, protective barrier',
-            'Coconut Oil': 'Moisturizing, melts on skin contact',
-            'Shea Butter': 'Rich emollient',
-            'Essential Oil': 'Your choice of fragrance'
-        },
-        sections: { 'Beeswax': 'Melt Together', 'Essential Oil': 'Add When Cooled' },
-        batchSize: { metric: 90, imperial: 3, unit: { metric: 'g', imperial: 'bars' } },
-        instructions: [
+        makes: { count: 3, unit: 'bar' },
+        ingredients: [
+            { group: 'Melt Together' },
+            { name: 'Beeswax', g: 30, info: 'Creates solid bar, protective barrier' },
+            { name: 'Coconut Oil', g: 30, info: 'Moisturizing, melts on skin contact' },
+            { name: 'Shea Butter', g: 30, info: 'Rich emollient' },
+            { group: 'Add When Cooled' },
+            { name: 'Essential Oil', drops: 20, info: 'Your choice of fragrance' },
+        ],
+        method: [
             'Set up double boiler with simmering water.',
             'Add beeswax and melt completely.',
             'Add coconut oil and shea butter, stir until melted.',
@@ -1603,38 +1525,122 @@ const recipes = {
             'Pop out of molds when completely solid.',
             'To use: Warm bar between hands and apply to skin.'
         ],
-        tips: [
+        notes: [
             'Perfect for travel - no liquids',
             'Store in tin to protect from heat',
             'Great for elbows, knees, and heels',
-            'Use candelilla wax for vegan version',
-            'Shelf life: 6–12 months. Fully anhydrous solid — store in a tin away from heat to prevent melting.'
-        ]
+            'Use candelilla wax for vegan version'
+        ],
+        shelfLife: '6–12 months. Fully anhydrous solid — store in a tin away from heat to prevent melting.'
+    },
+    handsalve: {
+        category: 'bodycare',
+        tab: 'Hand Salve',
+        name: 'Hand & Cuticle Salve',
+        subtitle: 'Heavy-duty repair for gardeners, dishwashers, and winter hands',
+        difficulty: 'Easy',
+        time: '20 min',
+        makes: { count: 5, unit: 'small tin' },
+        ingredients: [
+            { name: 'Sweet Almond Oil', g: 30 },
+            { name: 'Shea Butter', g: 25, info: 'Repair and cushion' },
+            { name: 'Beeswax', g: 25, info: 'The high wax ratio is what makes this a salve, not a balm — it leaves a protective film that survives a hand-wash or two' },
+            { name: 'Jojoba Oil', g: 15, info: 'Absorbs without long-lasting grease' },
+            { name: 'Vitamin E Oil', g: 3, info: 'Antioxidant — slows oil rancidity. Not a preservative (none needed: anhydrous).' },
+            { name: 'Lavender Essential Oil', drops: 15, info: 'Optional — swap for 10 drops peppermint for a work-day version' },
+        ],
+        method: [
+            'Melt the beeswax in a double boiler — it has the highest melt point, so start it first.',
+            'Add the shea butter and stir until melted.',
+            'Remove from heat and stir in the almond oil, jojoba oil, and vitamin E.',
+            'Cool for a minute, then add the essential oil.',
+            'Pour into small tins or jars and leave undisturbed until fully set, about 1 hour.',
+            'To use: scrape a little with a fingernail, warm between fingertips, and massage into hands and cuticles. Best applied at night.'
+        ],
+        notes: [
+            'Too firm? Remelt and add a spoon of oil. Too soft? Remelt with a bit more beeswax.',
+            'A 15 g tin lives happily in a coat pocket or garden shed',
+            'Great lip balm in a pinch — same family of ingredients'
+        ],
+        shelfLife: '~1 year. Anhydrous, so no microbial risk — just keep water out of the tin.'
+    },
+    footbutter: {
+        category: 'bodycare',
+        tab: 'Foot Butter',
+        name: 'Peppermint Foot Butter',
+        subtitle: 'Rich overnight treatment for hard-working feet',
+        difficulty: 'Easy',
+        time: '30 min + chill time',
+        makes: { count: 1, unit: 'jar' },
+        ingredients: [
+            { name: 'Shea Butter', g: 50, info: 'The repair workhorse for cracked heels' },
+            { name: 'Cocoa Butter', g: 20, info: 'Adds body so the butter holds up in a warm bathroom' },
+            { name: 'Coconut Oil', g: 15 },
+            { name: 'Arrowroot Powder', g: 10, info: 'Cuts the grease so you can (eventually) walk on tile again' },
+            { name: 'Peppermint Essential Oil', drops: 20, info: 'Cooling and deodorizing' },
+            { name: 'Tea Tree Essential Oil', drops: 10, info: 'Mildly antifungal — a sensible addition for feet' },
+        ],
+        method: [
+            'Melt the shea, cocoa butter, and coconut oil together in a double boiler.',
+            'Off heat, whisk in the arrowroot powder until completely smooth.',
+            'Chill until set around the edges but still soft in the middle, about 30–40 minutes.',
+            'Whip with electric beaters for 2–3 minutes until fluffy, adding the essential oils halfway through.',
+            'Spoon into a wide-mouth jar.',
+            'To use: massage into clean feet at night, concentrating on heels, then cover with cotton socks and sleep on it.'
+        ],
+        notes: [
+            'The sock step is not optional if you value your sheets',
+            'For cracked heels, exfoliate first — the pumice-then-butter combo is what actually works',
+            'Skip tea tree if pregnant or if skin is broken — plain peppermint is fine'
+        ],
+        shelfLife: '6+ months. Anhydrous — keep water out of the jar and scoop with dry hands.'
+    },
+    solidperfume: {
+        category: 'bodycare',
+        tab: 'Solid Perfume',
+        name: 'Solid Perfume',
+        subtitle: 'Pocket-sized scent in a slide tin',
+        difficulty: 'Easy',
+        time: '15 min',
+        makes: { count: 1, unit: 'tin' },
+        ingredients: [
+            { name: 'Jojoba Oil', g: 12, info: 'The classic perfume carrier — nearly odorless and never goes rancid on you' },
+            { name: 'Beeswax', g: 6, info: 'Sets the perfume; equal parts wax to oil gives a firmer travel-safe texture' },
+            { name: 'Essential Oil Blend', drops: 40, info: 'Build it like a chord: roughly 3 parts top note (bergamot, sweet orange), 2 parts heart (lavender, geranium, ylang ylang), 1 part base (cedarwood, vanilla, sandalwood). ~10% total fragrance is the ceiling for leave-on skin products — this recipe sits just under it.' },
+        ],
+        method: [
+            'Blend your essential oils first in a small dish and let them sit 10 minutes — smell again before committing; blends shift as they marry.',
+            'Melt the beeswax and jojoba together in a double boiler.',
+            'Remove from heat, cool 1 minute, then stir in the oil blend.',
+            'Pour immediately into a small slide tin or lip balm pot.',
+            'Set 30 minutes. To wear: warm a fingertip on the surface and press onto pulse points.'
+        ],
+        notes: [
+            'Solid perfume sits close to the skin — it is for you and people at conversation distance, not the whole room',
+            'Citrus top notes fade first; refresh a citrus-heavy tin every few months',
+            'Avoid phototoxic oils on sun-exposed skin: cold-pressed bergamot, lime, and lemon. Bergamot FCF and distilled lime are the safe versions.'
+        ],
+        shelfLife: '~1 year. Jojoba is exceptionally stable — the scent will fade before the base spoils.'
     },
     bathbomb: {
+        category: 'bathtime',
+        tab: 'Bath Bombs',
         name: 'Fizzing Bath Bombs',
         subtitle: 'Luxurious fizzy bath experience',
         difficulty: 'Medium',
         time: '30 min + drying',
-        base: {
-            'Baking Soda': { metric: 200, imperial: 1, unit: { metric: 'g', imperial: 'cup' } },
-            'Citric Acid': { metric: 100, imperial: 0.5, unit: { metric: 'g', imperial: 'cup' } },
-            'Epsom Salt': { metric: 50, imperial: 0.25, unit: { metric: 'g', imperial: 'cup' } },
-            'Coconut Oil': { metric: 28, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Water': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Essential Oil': { metric: 15, imperial: 15, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Baking Soda': 'Creates fizz reaction',
-            'Citric Acid': 'Reacts with baking soda for fizz',
-            'Epsom Salt': 'Relaxing muscle soak',
-            'Coconut Oil': 'Moisturizing',
-            'Water': 'Just enough to bind',
-            'Essential Oil': 'Lavender, eucalyptus, or citrus'
-        },
-        sections: { 'Baking Soda': 'Dry Ingredients', 'Coconut Oil': 'Wet Ingredients' },
-        batchSize: { metric: 400, imperial: 4, unit: { metric: 'g', imperial: 'bombs' } },
-        instructions: [
+        makes: { count: 4, unit: 'bomb' },
+        ingredients: [
+            { group: 'Dry Ingredients' },
+            { name: 'Baking Soda', g: 200, info: 'Creates fizz reaction' },
+            { name: 'Citric Acid', g: 100, info: 'Reacts with baking soda for fizz' },
+            { name: 'Epsom Salt', g: 50, info: 'Classic soaking salt' },
+            { group: 'Wet Ingredients' },
+            { name: 'Coconut Oil', g: 28, info: 'Moisturizing' },
+            { name: 'Water', g: 5, info: 'Just enough to bind' },
+            { name: 'Essential Oil', drops: 15, info: 'Lavender, eucalyptus, or citrus' },
+        ],
+        method: [
             'In large bowl, whisk together baking soda, citric acid, and Epsom salt.',
             'In small bowl, mix melted coconut oil, water, and essential oil.',
             'VERY SLOWLY drizzle wet mixture into dry, stirring constantly.',
@@ -1646,39 +1652,34 @@ const recipes = {
             'Allow to dry completely for 24 hours.',
             'Store in airtight container away from moisture.'
         ],
-        tips: [
+        notes: [
             'Humidity affects results - make on dry days',
             'Do not add liquid too fast or it will activate',
             'Citric acid found in baking aisle',
             'Use silicone molds for easy release',
-            'Add dried flowers or biodegradable glitter for decoration',
-            'Shelf life: 6+ months. Dry product — keep away from moisture or they will fizz prematurely. Store in airtight container.'
-        ]
+            'Add dried flowers or biodegradable glitter for decoration'
+        ],
+        shelfLife: '6+ months. Dry product — keep away from moisture or they will fizz prematurely. Store in airtight container.'
     },
     bathsalts: {
+        category: 'bathtime',
+        tab: 'Bath Salts',
         name: 'Relaxing Bath Salts',
         subtitle: 'Soothing mineral soak',
         difficulty: 'Easy',
         time: '10 min',
-        base: {
-            'Epsom Salt': { metric: 200, imperial: 1, unit: { metric: 'g', imperial: 'cup' } },
-            'Sea Salt': { metric: 100, imperial: 0.5, unit: { metric: 'g', imperial: 'cup' } },
-            'Baking Soda': { metric: 50, imperial: 0.25, unit: { metric: 'g', imperial: 'cup' } },
-            'Dried Lavender': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Coconut Oil': { metric: 14, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Lavender Essential Oil': { metric: 15, imperial: 15, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Epsom Salt': 'Magnesium-rich muscle relaxer',
-            'Sea Salt': 'Detoxifying minerals',
-            'Baking Soda': 'Softens water and skin',
-            'Dried Lavender': 'Optional for visual appeal',
-            'Coconut Oil': 'Moisturizing',
-            'Lavender Essential Oil': 'Calming and sleep-promoting'
-        },
-        sections: { 'Epsom Salt': 'Salt Base', 'Coconut Oil': 'Add-ins' },
-        batchSize: { metric: 380, imperial: 8, unit: { metric: 'g', imperial: 'baths' } },
-        instructions: [
+        makes: { count: 8, unit: 'bath' },
+        ingredients: [
+            { group: 'Salt Base' },
+            { name: 'Epsom Salt', g: 200, info: 'Magnesium sulfate — the classic soaking salt' },
+            { name: 'Sea Salt', g: 100, info: 'Coarser crystals for texture' },
+            { name: 'Baking Soda', g: 50, info: 'Softens the water' },
+            { name: 'Dried Lavender', g: 15, info: 'Optional for visual appeal' },
+            { group: 'Add-ins' },
+            { name: 'Coconut Oil', g: 14, info: 'Moisturizing' },
+            { name: 'Lavender Essential Oil', drops: 15, info: 'Calming scent' },
+        ],
+        method: [
             'Combine Epsom salt, sea salt, and baking soda in large bowl.',
             'Mix well to evenly distribute.',
             'In small bowl, melt coconut oil.',
@@ -1688,38 +1689,33 @@ const recipes = {
             'Transfer to airtight jar or container.',
             'To use: Add 2-4 tablespoons to warm running bath water.'
         ],
-        tips: [
+        notes: [
             'Use within 6 months for best fragrance',
             'Store away from moisture',
             'Try eucalyptus for congestion, peppermint for energy',
-            'Makes beautiful layered gifts in clear jars',
-            'Shelf life: 6–12 months. Dry salt base with minimal oil — store in airtight container away from moisture.'
-        ]
+            'Makes beautiful layered gifts in clear jars'
+        ],
+        shelfLife: '6–12 months. Dry salt base with minimal oil — store in airtight container away from moisture.'
     },
     milkbath: {
+        category: 'bathtime',
+        tab: 'Milk Bath',
         name: 'Coconut Milk Bath',
         subtitle: 'Luxurious skin-softening soak',
         difficulty: 'Easy',
         time: '10 min',
-        base: {
-            'Powdered Coconut Milk': { metric: 100, imperial: 0.5, unit: { metric: 'g', imperial: 'cup' } },
-            'Oat Flour': { metric: 50, imperial: 0.25, unit: { metric: 'g', imperial: 'cup' } },
-            'Baking Soda': { metric: 30, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Epsom Salt': { metric: 50, imperial: 0.25, unit: { metric: 'g', imperial: 'cup' } },
-            'Dried Rose Petals': { metric: 10, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Rose Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Powdered Coconut Milk': 'Moisturizing and soothing',
-            'Oat Flour': 'Anti-inflammatory, softens water',
-            'Baking Soda': 'Softens skin',
-            'Epsom Salt': 'Relaxes muscles',
-            'Dried Rose Petals': 'Optional luxury touch',
-            'Rose Essential Oil': 'Or use lavender or chamomile'
-        },
-        sections: { 'Powdered Coconut Milk': 'Base', 'Dried Rose Petals': 'Botanicals' },
-        batchSize: { metric: 250, imperial: 5, unit: { metric: 'g', imperial: 'baths' } },
-        instructions: [
+        makes: { count: 5, unit: 'bath' },
+        ingredients: [
+            { group: 'Base' },
+            { name: 'Powdered Coconut Milk', g: 100, info: 'Turns the water milky and soft' },
+            { name: 'Oat Flour', g: 50, info: 'Softens the water and soothes dry skin' },
+            { name: 'Baking Soda', g: 30, info: 'Softens skin' },
+            { name: 'Epsom Salt', g: 50, info: 'Classic soaking salt' },
+            { group: 'Botanicals' },
+            { name: 'Dried Rose Petals', g: 10, info: 'Optional luxury touch' },
+            { name: 'Rose Essential Oil', drops: 10, info: 'Or use lavender or chamomile' },
+        ],
+        method: [
             'Make oat flour by blending oats until powdery (or buy pre-made).',
             'Combine powdered coconut milk, oat flour, baking soda, and Epsom salt.',
             'Add essential oil and mix well.',
@@ -1729,36 +1725,68 @@ const recipes = {
             'Swirl to dissolve completely.',
             'Soak for 20-30 minutes.'
         ],
-        tips: [
+        notes: [
             'Great for dry, irritated skin',
             'Oat flour can be made in a blender',
             'Add muslin bag to contain petals for easier cleanup',
-            'Store in cool, dry place',
-            'Shelf life: 3–6 months. Dry mix — milk powder can go rancid over time. Store in airtight container in a cool place.'
-        ]
+            'Store in cool, dry place'
+        ],
+        shelfLife: '3–6 months. Dry mix — milk powder can go rancid over time. Store in airtight container in a cool place.'
+    },
+    showersteamers: {
+        category: 'bathtime',
+        tab: 'Shower Steamers',
+        name: 'Eucalyptus Shower Steamers',
+        subtitle: 'Bath bomb energy, no bathtub required',
+        difficulty: 'Medium',
+        time: '30 min + 24 h drying',
+        makes: { count: 6, unit: 'steamer' },
+        safety: [
+            'These are NOT bath bombs — the essential oil concentration is not skin-safe for a soak. Shower floor only.',
+            'Keep them out of showers that young children use. The 1,8-cineole in eucalyptus and the menthol in peppermint can slow a young child\'s breathing, and aromatherapy safety guidance keeps peppermint away from children under 6 and eucalyptus away from children under 10.'
+        ],
+        ingredients: [
+            { group: 'Dry Ingredients' },
+            { name: 'Baking Soda', g: 240, info: 'Same fizz chemistry as bath bombs — 2:1 soda to citric acid' },
+            { name: 'Citric Acid', g: 120 },
+            { name: 'Cornstarch', g: 30, info: 'Slows the fizz so the steamer lasts the whole shower' },
+            { group: 'Wet Ingredients' },
+            { name: 'Witch Hazel (in spray bottle)', g: 15, info: 'Binds the mix without triggering the fizz the way plain water would. Spray, never pour.' },
+            { name: 'Eucalyptus Essential Oil', drops: 60, info: 'This is a far higher essential oil load than a bath bomb — that\'s the point. Steamers perfume the steam, they never touch your skin.' },
+            { name: 'Peppermint Essential Oil', drops: 30, info: 'The wake-up half of the blend' },
+        ],
+        method: [
+            'Whisk the baking soda, citric acid, and cornstarch until completely uniform.',
+            'Add the essential oils while whisking fast to prevent fizzing.',
+            'Spritz witch hazel 2–3 sprays at a time, mixing between rounds, until a squeezed handful just holds its shape like damp snow.',
+            'Pack very firmly into silicone molds or a mini muffin tin.',
+            'Dry 24 hours, unmold gently, then dry another 24 hours before storing airtight.',
+            'To use: place on the shower floor toward the back, out of the direct stream. A splash of water starts it; steam does the rest.'
+        ],
+        notes: [
+            'Humid day? Postpone. The mix will swell and self-fizz.',
+            'Congestion blend shown; try lavender + cedarwood for an evening version'
+        ],
+        shelfLife: '~6 months airtight. The scent fades before the fizz does — add a couple of fresh EO drops on top of an older steamer.'
     },
     lipbalm: {
+        category: 'lipcare',
+        tab: 'Lip Balm',
         name: 'Beeswax Lip Balm',
         subtitle: 'Moisturizing protection for soft lips',
         difficulty: 'Easy',
         time: '15 min',
-        base: {
-            'Beeswax': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Coconut Oil': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Shea Butter': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Vitamin E Oil': { metric: 5, imperial: 5, unit: { metric: 'drops', imperial: 'drops' } },
-            'Peppermint Essential Oil': { metric: 8, imperial: 8, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Beeswax': 'Creates protective barrier (use candelilla for vegan)',
-            'Coconut Oil': 'Moisturizing and antibacterial',
-            'Shea Butter': 'Rich emollient',
-            'Vitamin E Oil': 'Antioxidant — slows oil rancidity. Not a preservative (none needed: anhydrous).',
-            'Peppermint Essential Oil': 'Cooling and refreshing'
-        },
-        sections: { 'Beeswax': 'Melt Together', 'Vitamin E Oil': 'Add When Melted' },
-        batchSize: { metric: 45, imperial: 10, unit: { metric: 'g', imperial: 'tubes' } },
-        instructions: [
+        makes: { count: 10, unit: 'tube' },
+        ingredients: [
+            { group: 'Melt Together' },
+            { name: 'Beeswax', g: 15, info: 'Creates protective barrier (use candelilla for vegan)' },
+            { name: 'Coconut Oil', g: 15, info: 'Moisturizing; softens the balm' },
+            { name: 'Shea Butter', g: 15, info: 'Rich emollient' },
+            { group: 'Add When Melted' },
+            { name: 'Vitamin E Oil', drops: 5, info: 'Antioxidant — slows oil rancidity. Not a preservative (none needed: anhydrous).' },
+            { name: 'Peppermint Essential Oil', drops: 8, info: 'Cooling and refreshing' },
+        ],
+        method: [
             'Set up double boiler with simmering water.',
             'Add beeswax and melt completely.',
             'Add coconut oil and shea butter, stir until melted.',
@@ -1768,34 +1796,30 @@ const recipes = {
             'Let cool completely (1-2 hours).',
             'Cap and label.'
         ],
-        tips: [
+        notes: [
             'Work quickly as mixture solidifies fast',
             'Use candelilla wax for vegan - use 50% of beeswax amount',
-            'Makes approximately 10 standard tubes',
-            'Try different essential oils for variety',
-            'Shelf life: 6–12 months. Anhydrous wax and oil blend — stable as long as stored away from heat.'
-        ]
+            'Try different essential oils for variety'
+        ],
+        shelfLife: '6–12 months. Anhydrous wax and oil blend — stable as long as stored away from heat.'
     },
     lipscrub: {
+        category: 'lipcare',
+        tab: 'Lip Scrub',
         name: 'Honey Sugar Lip Scrub',
         subtitle: 'Gentle exfoliation for smooth lips',
         difficulty: 'Easy',
         time: '5 min',
-        base: {
-            'Brown Sugar': { metric: 30, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Honey': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Coconut Oil': { metric: 10, imperial: 2, unit: { metric: 'g', imperial: 'tsp' } },
-            'Vanilla Extract': { metric: 2, imperial: 0.5, unit: { metric: 'g', imperial: 'tsp' } }
-        },
-        info: {
-            'Brown Sugar': 'Gentle exfoliant with small granules',
-            'Honey': 'Humectant and antibacterial',
-            'Coconut Oil': 'Moisturizing base',
-            'Vanilla Extract': 'Natural flavoring (optional)'
-        },
-        sections: { 'Brown Sugar': 'Exfoliant', 'Vanilla Extract': 'Flavoring' },
-        batchSize: { metric: 57, imperial: 10, unit: { metric: 'g', imperial: 'applications' } },
-        instructions: [
+        makes: { count: 10, unit: 'application' },
+        ingredients: [
+            { group: 'Exfoliant' },
+            { name: 'Brown Sugar', g: 30, info: 'Gentle exfoliant with small granules' },
+            { name: 'Honey', g: 15, info: 'Humectant — draws in moisture' },
+            { name: 'Coconut Oil', g: 10, info: 'Moisturizing base' },
+            { group: 'Flavoring' },
+            { name: 'Vanilla Extract', g: 2, info: 'Natural flavoring (optional)' },
+        ],
+        method: [
             'Gently melt coconut oil in a double boiler until just liquid.',
             'In small bowl, combine brown sugar and honey.',
             'Add melted coconut oil and vanilla extract.',
@@ -1805,36 +1829,31 @@ const recipes = {
             'Gently rub in circular motions for 30-60 seconds.',
             'Rinse off or lick off and apply lip balm.'
         ],
-        tips: [
+        notes: [
             'Use 1-2 times per week',
             'Great before applying lipstick',
-            'Safe if accidentally ingested',
-            'Store in cool place, lasts 2-3 months',
-            'Shelf life: 2–3 months. Sugar can draw in moisture — store in a cool place with a tight lid, use dry fingers.'
-        ]
+            'Safe if accidentally ingested'
+        ],
+        shelfLife: '2–3 months. Sugar can draw in moisture — store in a cool place with a tight lid, use dry fingers.'
     },
     tintedlipbalm: {
+        category: 'lipcare',
+        tab: 'Tinted Lip Balm',
         name: 'Tinted Lip Balm',
         subtitle: 'Natural color with nourishing moisture',
         difficulty: 'Medium',
         time: '20 min',
-        base: {
-            'Beeswax': { metric: 10, imperial: 2, unit: { metric: 'g', imperial: 'tsp' } },
-            'Coconut Oil': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Shea Butter': { metric: 10, imperial: 2, unit: { metric: 'g', imperial: 'tsp' } },
-            'Lip-safe Mica': { metric: 1, imperial: 0.25, unit: { metric: 'g', imperial: 'tsp' } },
-            'Vitamin E Oil': { metric: 3, imperial: 3, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Beeswax': 'Creates solid texture',
-            'Coconut Oil': 'Moisturizing base',
-            'Shea Butter': 'Creamy texture',
-            'Lip-safe Mica': 'Cosmetic-grade, lip-approved mica in red/berry shades — disperses evenly in oil.',
-            'Vitamin E Oil': 'Antioxidant — slows oil rancidity. Not a preservative (none needed: anhydrous).'
-        },
-        sections: { 'Beeswax': 'Melt Together', 'Lip-safe Mica': 'Add for Color' },
-        batchSize: { metric: 36, imperial: 6, unit: { metric: 'g', imperial: 'tubes' } },
-        instructions: [
+        makes: { count: 8, unit: 'tube' },
+        ingredients: [
+            { group: 'Melt Together' },
+            { name: 'Beeswax', g: 10, info: 'Creates solid texture' },
+            { name: 'Coconut Oil', g: 15, info: 'Moisturizing base' },
+            { name: 'Shea Butter', g: 10, info: 'Creamy texture' },
+            { group: 'Add for Color' },
+            { name: 'Lip-safe Mica', g: 1, info: 'Cosmetic-grade, lip-approved mica in red/berry shades — disperses evenly in oil.' },
+            { name: 'Vitamin E Oil', drops: 3, info: 'Antioxidant — slows oil rancidity. Not a preservative (none needed: anhydrous).' },
+        ],
+        method: [
             'Set up double boiler with simmering water.',
             'Add beeswax and melt completely.',
             'Add coconut oil and shea butter, stir until melted.',
@@ -1846,76 +1865,64 @@ const recipes = {
             'Pour into tubes or tins.',
             'Let set for 1-2 hours.'
         ],
-        tips: [
+        notes: [
             'Start with less mica - you can always add more',
             'All-natural alternative: alkanet-root-infused oil (steep alkanet root in your coconut oil for 1-2 weeks, strain) gives a mauve-red tint that IS oil-soluble',
             'Cocoa powder gives a subtle brown tint (it disperses rather than dissolves — expect a matte, slightly textured finish)',
-            'Color will deepen slightly as it sets',
-            'Shelf life: 6–12 months. Anhydrous wax base — same stability as plain lip balm. Store away from heat.'
-        ]
+            'Color will deepen slightly as it sets'
+        ],
+        shelfLife: '6–12 months. Anhydrous wax base — same stability as plain lip balm. Store away from heat.'
     },
     africansoap: {
+        category: 'soaps',
+        tab: 'African Black Soap',
         name: 'African Black Soap Blend',
         subtitle: 'Natural cleansing with essential oils',
         difficulty: 'Easy',
-        time: '15 min',
-        base: {
-            'African Black Soap': { metric: 250, imperial: 9, unit: { metric: 'g', imperial: 'oz' } },
-            'Cedarwood Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Rosemary Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Sweet Orange Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'African Black Soap': 'Traditional West African cleansing soap',
-            'Cedarwood Essential Oil': 'Grounding, good for oily skin',
-            'Rosemary Essential Oil': 'Stimulating, antibacterial',
-            'Sweet Orange Essential Oil': 'Uplifting, brightening'
-        },
-        sections: { 'African Black Soap': 'Base', 'Cedarwood Essential Oil': 'Essential Oils' },
-        batchSize: { metric: 250, imperial: 9, unit: { metric: 'g', imperial: 'oz' } },
-        instructions: [
-            'Break African black soap into small pieces.',
-            'Place in double boiler over low heat.',
-            'Melt gently, stirring occasionally - do not overheat.',
-            'Remove from heat when just softened/melted.',
-            'Let cool for 2-3 minutes.',
-            'Add essential oils one by one, stirring between each.',
-            'Pour into molds or roll into balls.',
-            'Let cool completely before unmolding.',
-            'Cure for 24-48 hours before use.'
+        time: '20 min + 3–5 days drying',
+        ingredients: [
+            { group: 'Base' },
+            { name: 'African Black Soap', g: 250, info: 'Traditional West African soap. It is a soft potassium soap, so warmth and water soften it into a paste — it never melts like melt-and-pour base.' },
+            { group: 'Essential Oils' },
+            { name: 'Cedarwood Essential Oil', drops: 10, info: 'Woody, grounding scent' },
+            { name: 'Rosemary Essential Oil', drops: 10, info: 'Fresh, herbal scent' },
+            { name: 'Sweet Orange Essential Oil', drops: 10, info: 'Sweet citrus scent' },
         ],
-        tips: [
+        method: [
+            'Grate or crumble the black soap into small pieces.',
+            'Work in hot water a little at a time — about 1–2 tablespoons (15–30 ml) per 100 g of soap — kneading by hand, or warming gently over a double boiler, until it forms a firm, moldable paste. It softens rather than melts, so don\'t wait for it to turn liquid.',
+            'Add the essential oils one at a time, kneading between each.',
+            'Press the paste firmly into molds, or roll it into balls.',
+            'Air-dry for 3–5 days, until firm, before use.'
+        ],
+        notes: [
             'African black soap is naturally soft',
             'Store on well-draining soap dish',
             'Great for acne-prone skin',
-            'Can also be used as body wash',
-            'Shelf life: 6–12 months. Solid soap — store on a well-draining dish between uses.'
-        ]
+            'Can also be used as body wash'
+        ],
+        shelfLife: '6–12 months. Solid soap — store on a well-draining dish between uses.'
     },
     shavingbar: {
+        category: 'soaps',
+        tab: 'Shaving Bar',
         name: 'Shaving Bar',
         subtitle: 'Smooth, conditioning shave bar',
         difficulty: 'Medium',
         time: '30 min',
-        base: {
-            'Shampoo Base': { metric: 96, imperial: 3.4, unit: { metric: 'g', imperial: 'oz' } },
-            'Shea Butter': { metric: 15, imperial: 0.5, unit: { metric: 'g', imperial: 'oz' } },
-            'Avocado Oil': { metric: 28, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Bentonite Clay': { metric: 7.5, imperial: 0.5, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Lavender Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Peppermint Halo Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Shampoo Base': 'SCI or SCS based solid base',
-            'Shea Butter': 'Conditioning and protective',
-            'Avocado Oil': 'Nourishing and moisturizing',
-            'Bentonite Clay': 'Provides slip for razor glide',
-            'Lavender Essential Oil': 'Soothing post-shave',
-            'Peppermint Halo Essential Oil': 'Cooling sensation'
-        },
-        sections: { 'Shampoo Base': 'Melt First', 'Bentonite Clay': 'Add for Slip', 'Lavender Essential Oil': 'Add When Cooled' },
-        batchSize: { metric: 158, imperial: 2, unit: { metric: 'g', imperial: 'bars' } },
-        instructions: [
+        makes: { count: 2, unit: 'bar' },
+        ingredients: [
+            { group: 'Melt First' },
+            { name: 'Shampoo Base', g: 96, info: 'SCI or SCS based solid base' },
+            { name: 'Shea Butter', g: 15, info: 'Conditioning and protective' },
+            { name: 'Avocado Oil', g: 28, info: 'Nourishing and moisturizing' },
+            { group: 'Add for Slip' },
+            { name: 'Bentonite Clay', g: 7.5, info: 'Provides slip for razor glide' },
+            { group: 'Add When Cooled' },
+            { name: 'Lavender Essential Oil', drops: 10, info: 'Soothing post-shave' },
+            { name: 'Peppermint Halo Essential Oil', drops: 10, info: 'Cooling sensation' },
+        ],
+        method: [
             'Grate or chop shampoo base into small pieces.',
             'Melt in double boiler over low heat.',
             'Add shea butter and stir until melted.',
@@ -1927,34 +1934,31 @@ const recipes = {
             'Pour into molds and press firmly.',
             'Let set 24 hours before unmolding.'
         ],
-        tips: [
+        notes: [
             'Wet bar and create lather in hands before applying',
             'Clay provides excellent razor glide',
             'Store on well-draining soap dish',
-            'Great for sensitive skin',
-            'Shelf life: 6–12 months. Solid soap bar — store on a well-draining dish to extend life.'
-        ]
+            'Great for sensitive skin'
+        ],
+        shelfLife: '6–12 months. Solid soap bar — store on a well-draining dish to extend life.'
     },
     meltpour: {
+        category: 'soaps',
+        tab: 'Melt and Pour',
         name: 'Melt and Pour Soap',
         subtitle: 'Beginner-friendly customizable soap',
         difficulty: 'Easy',
         time: '20 min',
-        base: {
-            'Melt and Pour Soap Base': { metric: 450, imperial: 1, unit: { metric: 'g', imperial: 'lb' } },
-            'Carrier Oil': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Essential Oil': { metric: 20, imperial: 20, unit: { metric: 'drops', imperial: 'drops' } },
-            'Colorant': { metric: 3, imperial: 3, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Melt and Pour Soap Base': 'Goat milk, shea, or clear glycerin',
-            'Carrier Oil': 'Olive, sweet almond, or jojoba',
-            'Essential Oil': 'Your choice of fragrance',
-            'Colorant': 'Soap-safe colorant or mica powder'
-        },
-        sections: { 'Melt and Pour Soap Base': 'Base', 'Essential Oil': 'Customize' },
-        batchSize: { metric: 450, imperial: 4, unit: { metric: 'g', imperial: 'bars' } },
-        instructions: [
+        makes: { count: 4, unit: 'bar' },
+        ingredients: [
+            { group: 'Base' },
+            { name: 'Melt and Pour Soap Base', g: 450, info: 'Goat milk, shea, or clear glycerin' },
+            { name: 'Carrier Oil', g: 15, info: 'Olive, sweet almond, or jojoba' },
+            { group: 'Customize' },
+            { name: 'Essential Oil', g: 6, safety: 'Check your oil\'s IFRA (International Fragrance Association) safety limit first — some, like clove and cinnamon, must stay much lower.', info: 'Your choice of fragrance. 6 g (about 7 ml) is roughly 0.25 oz per pound, the starting rate soap suppliers use.' },
+            { name: 'Colorant', drops: 3, info: 'Soap-safe colorant or mica powder' },
+        ],
+        method: [
             'Cut soap base into 1-inch cubes.',
             'Place in double boiler over low heat.',
             'Stir occasionally until completely melted - do not boil.',
@@ -1967,44 +1971,75 @@ const recipes = {
             'Let set 2-4 hours until completely solid.',
             'Pop out of molds.'
         ],
-        tips: [
+        notes: [
             'Do not overheat or soap will become brittle',
             'Add dried herbs or flowers for decoration',
             'Alcohol spray removes surface bubbles',
-            'Ready to use immediately after setting',
-            'Shelf life: 12+ months. Melt-and-pour soap base is pre-preserved and very stable. Wrap in cling film to prevent glycerin dew.'
-        ]
+            'Ready to use immediately after setting'
+        ],
+        shelfLife: '12+ months. Melt-and-pour soap base is pre-preserved and very stable. Wrap in cling film to prevent glycerin dew.'
+    },
+    coldprocess: {
+        category: 'soaps',
+        tab: 'Cold Process Bar',
+        name: 'Cold Process Soap — Classic Bar',
+        subtitle: 'The real thing, from scratch · 5% superfat · ⚠ works with lye',
+        difficulty: 'Advanced',
+        time: '90 min + 4–6 week cure',
+        makes: { count: 9, unit: 'bar' },
+        ingredients: [
+            { group: 'Oil Phase' },
+            { name: 'Olive Oil', g: 450, info: 'Gentle, conditioning heart of the bar (56% of oils)' },
+            { name: 'Coconut Oil', g: 250, info: 'Hardness and big bubbly lather (31%)' },
+            { name: 'Shea Butter', g: 100, info: 'Creamy stability (13%)' },
+            { group: 'Lye Solution — handle with care' },
+            { name: 'Sodium Hydroxide (Lye)', g: 112, safety: 'Calculated for exactly these oils at 5% superfat. If you change ANY oil or amount, re-run the recipe through a lye calculator (SoapCalc, soapee.com) — never guess lye.', info: 'Buy 100% pure NaOH with no additives.' },
+            { name: 'Distilled Water', g: 264, info: 'Weigh it — this is a 2.4:1 water-to-lye ratio. Everything in soapmaking is measured by weight, never volume, including in imperial.' },
+            { group: 'At Trace (optional)' },
+            { name: 'Lavender Essential Oil', g: 24, info: 'Optional, added at trace (3% of oils)' },
+        ],
+        method: [
+            'SAFETY FIRST: goggles, gloves, long sleeves, closed shoes. Work ventilated, with no kids or pets in the room. Keep vinegar handy for neutralizing splashes on surfaces — but flush skin contact with plenty of running water, not vinegar.',
+            'Weigh the water into a heatproof pitcher. ALWAYS ADD LYE TO WATER, NEVER WATER TO LYE. Sprinkle the lye in slowly, stirring gently — it will heat to ~90°C and fume briefly. Do not lean over it. Set aside somewhere safe to cool.',
+            'Melt the coconut oil and shea butter, combine with the olive oil in your soaping pot.',
+            'Wait until both the oils and the lye solution have cooled to 38–43°C (100–110°F) — a cheap infrared thermometer makes this easy.',
+            'Pour the lye solution into the oils. Blend with a stick blender in short bursts, stirring between, until "trace" — the mixture thickens enough that drizzles sit briefly on the surface, like thin custard.',
+            'Stir in the essential oil by hand, then pour into a lined loaf mold and tap to release air bubbles.',
+            'Cover, wrap in a towel, and leave undisturbed 24–48 hours.',
+            'Wearing gloves (young soap is still caustic), unmold and cut into bars.',
+            'Cure on a rack with airflow for 4–6 weeks, turning weekly. Curing is not optional — it completes saponification and evaporates water for a hard, mild, long-lasting bar.'
+        ],
+        notes: [
+            'Read the full method twice and stage every tool before touching the lye',
+            'Use stainless steel, silicone, or sturdy plastic — never aluminum, which reacts violently with lye',
+            'Dedicate your soaping tools; don\'t reuse them for food',
+            'A zap-test or pH strips (target 9–10) after cure confirms the bar is skin-ready'
+        ],
+        shelfLife: '1+ year after cure. Bars get harder and milder with age — many soapers consider 6-month-old bars the best ones.'
     },
     deodorant1: {
+        category: 'deodorants',
+        tab: 'Original',
         name: 'Original Natural Deodorant',
         subtitle: 'Effective formula with citrus essential oils',
         difficulty: 'Medium',
         time: '25 min',
-        base: {
-            'Coconut Oil': { metric: 25, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Shea Butter': { metric: 10, imperial: 2, unit: { metric: 'g', imperial: 'tsp' } },
-            'Candelilla Wax': { metric: 4, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Arrowroot Powder': { metric: 30, imperial: 0.25, unit: { metric: 'g', imperial: 'cup' } },
-            'Baking Soda': { metric: 20, imperial: 2.5, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Magnesium Oxide': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Olive Oil': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Orange Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Bergamot Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Coconut Oil': 'Cocos Nucifera Oil - antibacterial',
-            'Shea Butter': 'Butyrospermum Parkii Butter - moisturizing',
-            'Candelilla Wax': 'Euphorbia Cerifera Cera - vegan hardener',
-            'Arrowroot Powder': 'Maranta Arundinacea Root Powder - absorbs moisture',
-            'Baking Soda': 'Sodium Bicarbonate - neutralizes odor',
-            'Magnesium Oxide': 'Additional odor control',
-            'Olive Oil': 'Olea Europaea Fruit Oil - nourishing',
-            'Orange Essential Oil': 'Citrus Sinensis Peel Oil - uplifting',
-            'Bergamot Essential Oil': 'Citrus Aurantium Bergamia - fresh citrus'
-        },
-        sections: { 'Coconut Oil': 'Step 1: Melt Together', 'Arrowroot Powder': 'Step 2: Dry Ingredients', 'Olive Oil': 'Step 3: Add After Mixing', 'Orange Essential Oil': 'Step 4: Add When Cooled' },
-        batchSize: { metric: 100, imperial: 0.5, unit: { metric: 'g', imperial: 'cup' } },
-        instructions: [
+        ingredients: [
+            { group: 'Step 1: Melt Together' },
+            { name: 'Coconut Oil', g: 25, info: 'Cocos Nucifera Oil - antibacterial' },
+            { name: 'Shea Butter', g: 10, info: 'Butyrospermum Parkii Butter - moisturizing' },
+            { name: 'Candelilla Wax', g: 4, info: 'Euphorbia Cerifera Cera - vegan hardener' },
+            { group: 'Step 2: Dry Ingredients' },
+            { name: 'Arrowroot Powder', g: 30, info: 'Maranta Arundinacea Root Powder - absorbs moisture' },
+            { name: 'Baking Soda', g: 20, info: 'Sodium Bicarbonate - neutralizes odor' },
+            { name: 'Magnesium Oxide', g: 5, info: 'Additional odor control' },
+            { group: 'Step 3: Add After Mixing' },
+            { name: 'Olive Oil', g: 5, info: 'Olea Europaea Fruit Oil - nourishing' },
+            { group: 'Step 4: Add When Cooled' },
+            { name: 'Orange Essential Oil', drops: 10, info: 'Citrus Sinensis Peel Oil - uplifting' },
+            { name: 'Bergamot Essential Oil', drops: 10, info: 'Citrus Aurantium Bergamia - fresh citrus' },
+        ],
+        method: [
             'In double boiler, melt coconut oil, shea butter, and candelilla wax.',
             'Stir until completely combined.',
             'Remove from heat and let cool for 2-3 minutes.',
@@ -2017,47 +2052,39 @@ const recipes = {
             'Let set at room temperature 2-3 hours or refrigerate 30 minutes.',
             'Store in cool, dry place.'
         ],
-        tips: [
+        notes: [
             'Contains naturally occurring limonene, citral, linalool from essential oils',
             'Reduce baking soda to 10-15g if skin is sensitive (bump magnesium oxide to compensate)',
             'Bergamot is phototoxic — if your underarms/upper arms see direct sun (sleeveless weather), buy "bergamot FCF" (furanocoumarin-free)',
             'Apply thin layer - a little goes a long way',
-            'Reapply after heavy exercise if needed',
-            'Shelf life: 3–6 months. Contains coconut oil which can soften or go rancid — store in a cool place.'
-        ]
+            'Reapply after heavy exercise if needed'
+        ],
+        shelfLife: '3–6 months. Contains coconut oil which can soften or go rancid — store in a cool place.'
     },
     deodorant2: {
+        category: 'deodorants',
+        tab: 'Lavender Sage',
         name: 'Lavender Sage Deodorant',
         subtitle: 'Calming herbal blend',
         difficulty: 'Medium',
         time: '25 min',
-        base: {
-            'Coconut Oil': { metric: 25, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Shea Butter': { metric: 10, imperial: 2, unit: { metric: 'g', imperial: 'tsp' } },
-            'Candelilla Wax': { metric: 4, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Arrowroot Powder': { metric: 30, imperial: 0.25, unit: { metric: 'g', imperial: 'cup' } },
-            'Baking Soda': { metric: 20, imperial: 2.5, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Magnesium Oxide': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Jojoba Oil': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Lavender Essential Oil': { metric: 8, imperial: 8, unit: { metric: 'drops', imperial: 'drops' } },
-            'Tea Tree Essential Oil': { metric: 4, imperial: 4, unit: { metric: 'drops', imperial: 'drops' } },
-            'Sage Essential Oil': { metric: 3, imperial: 3, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Coconut Oil': 'Antibacterial base',
-            'Shea Butter': 'Moisturizing',
-            'Candelilla Wax': 'Vegan hardener (or 8g beeswax)',
-            'Arrowroot Powder': 'Absorbs moisture',
-            'Baking Soda': 'The odour-neutralising workhorse — raises pH, inhibits bacteria, neutralises volatile fatty acids.',
-            'Magnesium Oxide': 'Additional odor control, gentler than baking soda',
-            'Jojoba Oil': 'Nourishing',
-            'Lavender Essential Oil': 'Calming, antibacterial',
-            'Tea Tree Essential Oil': 'Powerful antibacterial',
-            'Sage Essential Oil': 'Natural deodorizer'
-        },
-        sections: { 'Coconut Oil': 'Step 1: Melt Together', 'Arrowroot Powder': 'Step 2: Dry Ingredients', 'Jojoba Oil': 'Step 3: Add After Mixing', 'Lavender Essential Oil': 'Step 4: Add When Cooled' },
-        batchSize: { metric: 100, imperial: 0.5, unit: { metric: 'g', imperial: 'cup' } },
-        instructions: [
+        ingredients: [
+            { group: 'Step 1: Melt Together' },
+            { name: 'Coconut Oil', g: 25, info: 'Antibacterial base' },
+            { name: 'Shea Butter', g: 10, info: 'Moisturizing' },
+            { name: 'Candelilla Wax', g: 4, info: 'Vegan hardener (or 8g beeswax)' },
+            { group: 'Step 2: Dry Ingredients' },
+            { name: 'Arrowroot Powder', g: 30, info: 'Absorbs moisture' },
+            { name: 'Baking Soda', g: 20, info: 'The odour-neutralising workhorse — raises pH, inhibits bacteria, neutralises volatile fatty acids.' },
+            { name: 'Magnesium Oxide', g: 5, info: 'Additional odor control, gentler than baking soda' },
+            { group: 'Step 3: Add After Mixing' },
+            { name: 'Jojoba Oil', g: 5, info: 'Nourishing' },
+            { group: 'Step 4: Add When Cooled' },
+            { name: 'Lavender Essential Oil', drops: 8, info: 'Soft floral scent' },
+            { name: 'Tea Tree Essential Oil', drops: 4, info: 'Antibacterial, with a sharp, medicinal scent' },
+            { name: 'Sage Essential Oil', drops: 3, info: 'Herbal, earthy scent' },
+        ],
+        method: [
             'In double boiler, melt coconut oil, shea butter, and candelilla wax.',
             'Stir until completely combined.',
             'Remove from heat and let cool for 2-3 minutes.',
@@ -2069,45 +2096,37 @@ const recipes = {
             'Pour into deodorant containers or small jars.',
             'Let set at room temperature 2-3 hours or refrigerate 30 minutes.'
         ],
-        tips: [
+        notes: [
             'Reduce baking soda to 10-15g if skin is sensitive (bump magnesium oxide to compensate)',
             'Apply to clean, dry underarms',
-            'Store in cool place to prevent melting',
-            'Shelf life: 3–6 months. Contains coconut oil — store in a cool place to maintain consistency.'
-        ]
+            'Store in cool place to prevent melting'
+        ],
+        shelfLife: '3–6 months. Contains coconut oil — store in a cool place to maintain consistency.'
     },
     deodorant3: {
+        category: 'deodorants',
+        tab: 'September Fresh',
         name: 'September Fresh Deodorant',
         subtitle: 'Bright citrus and tea tree blend',
         difficulty: 'Medium',
         time: '25 min',
-        base: {
-            'Coconut Oil': { metric: 25, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Shea Butter': { metric: 10, imperial: 2, unit: { metric: 'g', imperial: 'tsp' } },
-            'Candelilla Wax': { metric: 4, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Arrowroot Powder': { metric: 30, imperial: 0.25, unit: { metric: 'g', imperial: 'cup' } },
-            'Baking Soda': { metric: 20, imperial: 2.5, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Magnesium Oxide': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Jojoba Oil': { metric: 5, imperial: 1, unit: { metric: 'g', imperial: 'tsp' } },
-            'Tea Tree Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } },
-            'Lemongrass Essential Oil': { metric: 5, imperial: 5, unit: { metric: 'drops', imperial: 'drops' } },
-            'Sweet Orange Essential Oil': { metric: 5, imperial: 5, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Coconut Oil': 'Antibacterial base',
-            'Shea Butter': 'Moisturizing and soothing',
-            'Candelilla Wax': 'Vegan hardener (or 8g beeswax)',
-            'Arrowroot Powder': 'Absorbs moisture',
-            'Baking Soda': 'The odour-neutralising workhorse — raises pH, inhibits bacteria, neutralises volatile fatty acids.',
-            'Magnesium Oxide': 'Additional odor control, gentler than baking soda',
-            'Jojoba Oil': 'Nourishing',
-            'Tea Tree Essential Oil': 'Powerful antibacterial',
-            'Lemongrass Essential Oil': 'Fresh, clean scent',
-            'Sweet Orange Essential Oil': 'Uplifting citrus'
-        },
-        sections: { 'Coconut Oil': 'Step 1: Melt Together', 'Arrowroot Powder': 'Step 2: Dry Ingredients', 'Jojoba Oil': 'Step 3: Add After Mixing', 'Tea Tree Essential Oil': 'Step 4: Add When Cooled' },
-        batchSize: { metric: 100, imperial: 0.5, unit: { metric: 'g', imperial: 'cup' } },
-        instructions: [
+        ingredients: [
+            { group: 'Step 1: Melt Together' },
+            { name: 'Coconut Oil', g: 25, info: 'Antibacterial base' },
+            { name: 'Shea Butter', g: 10, info: 'Moisturizing and soothing' },
+            { name: 'Candelilla Wax', g: 4, info: 'Vegan hardener (or 8g beeswax)' },
+            { group: 'Step 2: Dry Ingredients' },
+            { name: 'Arrowroot Powder', g: 30, info: 'Absorbs moisture' },
+            { name: 'Baking Soda', g: 20, info: 'The odour-neutralising workhorse — raises pH, inhibits bacteria, neutralises volatile fatty acids.' },
+            { name: 'Magnesium Oxide', g: 5, info: 'Additional odor control, gentler than baking soda' },
+            { group: 'Step 3: Add After Mixing' },
+            { name: 'Jojoba Oil', g: 5, info: 'Nourishing' },
+            { group: 'Step 4: Add When Cooled' },
+            { name: 'Tea Tree Essential Oil', drops: 10, info: 'Antibacterial, with a sharp, medicinal scent' },
+            { name: 'Lemongrass Essential Oil', drops: 5, info: 'Fresh, clean scent' },
+            { name: 'Sweet Orange Essential Oil', drops: 5, info: 'Uplifting citrus' },
+        ],
+        method: [
             'In double boiler, melt coconut oil, shea butter, and candelilla wax.',
             'Stir until completely combined.',
             'Remove from heat and let cool for 2-3 minutes.',
@@ -2119,320 +2138,162 @@ const recipes = {
             'Pour into deodorant containers or small jars.',
             'Let set at room temperature 2-3 hours or refrigerate 30 minutes.'
         ],
-        tips: [
+        notes: [
             'Reduce baking soda to 10-15g if skin is sensitive (bump magnesium oxide to compensate)',
             'Sweet orange (unlike bergamot) is not meaningfully phototoxic at these levels',
-            'Apply thin layer to clean, dry skin',
-            'Shelf life: 3–6 months. Contains coconut oil — store in a cool place to maintain consistency.'
-        ]
-    },
-    hairmask: {
-        name: 'Deep Conditioning Hair Mask',
-        subtitle: 'Weekly warm-oil repair treatment · single use, made fresh',
-        difficulty: 'Easy',
-        time: '15 min + 30 min on hair',
-        base: {
-            'Coconut Oil': { metric: 30, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Shea Butter': { metric: 20, imperial: 1.5, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Avocado Oil': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Raw Honey': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Rosemary Essential Oil': { metric: 3, imperial: 3, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Coconut Oil': 'One of the few oils proven to penetrate the hair shaft rather than just coating it',
-            'Shea Butter': 'Heavier conditioning for the lengths and ends',
-            'Avocado Oil': 'Rich in oleic acid — good penetration on porous or damaged hair',
-            'Raw Honey': 'Humectant — draws moisture into the strand. Warm gently so it blends with the oils.',
-            'Rosemary Essential Oil': 'Optional scalp bonus'
-        },
-        sections: {},
-        batchSize: { metric: 80, imperial: 1, unit: { metric: 'g', imperial: 'application' } },
-        instructions: [
-            'Melt the coconut oil and shea butter gently in a double boiler or a bowl set over hot water.',
-            'Remove from heat, stir in the avocado oil and honey until fully blended.',
-            'Let cool until comfortably warm to the touch — never hot.',
-            'Apply to dry hair from mid-length to ends, then work the remainder into the scalp. Comb through for even coverage.',
-            'Cover with a shower cap or warm towel and leave for 30–60 minutes.',
-            'Shampoo thoroughly — expect to need two lathers to remove the oil — then condition lightly as usual.'
+            'Apply thin layer to clean, dry skin'
         ],
-        tips: [
-            'One batch covers shoulder-length hair — scale up for longer or thicker hair',
-            'Fine or easily-weighed-down hair: apply to lengths only, skip the scalp',
-            'Use weekly for damaged hair, every 2–3 weeks for maintenance',
-            'Shelf life: make fresh each time. The honey makes leftovers unstable without a preservative — mix only what you will use today.'
-        ]
-    },
-    handsalve: {
-        name: 'Hand & Cuticle Salve',
-        subtitle: 'Heavy-duty repair for gardeners, dishwashers, and winter hands',
-        difficulty: 'Easy',
-        time: '20 min',
-        base: {
-            'Sweet Almond Oil': { metric: 30, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Shea Butter': { metric: 25, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Beeswax': { metric: 25, imperial: 2, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Jojoba Oil': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Vitamin E Oil': { metric: 3, imperial: 0.5, unit: { metric: 'g', imperial: 'tsp' } },
-            'Lavender Essential Oil': { metric: 15, imperial: 15, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Beeswax': 'The high wax ratio is what makes this a salve, not a balm — it leaves a protective film that survives a hand-wash or two',
-            'Shea Butter': 'Repair and cushion',
-            'Jojoba Oil': 'Absorbs without long-lasting grease',
-            'Vitamin E Oil': 'Antioxidant — slows oil rancidity. Not a preservative (none needed: anhydrous).',
-            'Lavender Essential Oil': 'Optional — swap for 10 drops peppermint for a work-day version'
-        },
-        sections: {},
-        batchSize: { metric: 100, imperial: 5, unit: { metric: 'g', imperial: 'small tins' } },
-        instructions: [
-            'Melt the beeswax in a double boiler — it has the highest melt point, so start it first.',
-            'Add the shea butter and stir until melted.',
-            'Remove from heat and stir in the almond oil, jojoba oil, and vitamin E.',
-            'Cool for a minute, then add the essential oil.',
-            'Pour into small tins or jars and leave undisturbed until fully set, about 1 hour.',
-            'To use: scrape a little with a fingernail, warm between fingertips, and massage into hands and cuticles. Best applied at night.'
-        ],
-        tips: [
-            'Too firm? Remelt and add a spoon of oil. Too soft? Remelt with a bit more beeswax.',
-            'A 15 g tin lives happily in a coat pocket or garden shed',
-            'Great lip balm in a pinch — same family of ingredients',
-            'Shelf life: ~1 year. Anhydrous, so no microbial risk — just keep water out of the tin.'
-        ]
-    },
-    footbutter: {
-        name: 'Peppermint Foot Butter',
-        subtitle: 'Rich overnight treatment for hard-working feet',
-        difficulty: 'Easy',
-        time: '30 min + chill time',
-        base: {
-            'Shea Butter': { metric: 50, imperial: 4, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Cocoa Butter': { metric: 20, imperial: 1.5, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Coconut Oil': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Arrowroot Powder': { metric: 10, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Peppermint Essential Oil': { metric: 20, imperial: 20, unit: { metric: 'drops', imperial: 'drops' } },
-            'Tea Tree Essential Oil': { metric: 10, imperial: 10, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Shea Butter': 'The repair workhorse for cracked heels',
-            'Cocoa Butter': 'Adds body so the butter holds up in a warm bathroom',
-            'Arrowroot Powder': 'Cuts the grease so you can (eventually) walk on tile again',
-            'Peppermint Essential Oil': 'Cooling and deodorizing',
-            'Tea Tree Essential Oil': 'Mildly antifungal — a sensible addition for feet'
-        },
-        sections: {},
-        batchSize: { metric: 95, imperial: 1, unit: { metric: 'g', imperial: 'jar' } },
-        instructions: [
-            'Melt the shea, cocoa butter, and coconut oil together in a double boiler.',
-            'Off heat, whisk in the arrowroot powder until completely smooth.',
-            'Chill until set around the edges but still soft in the middle, about 30–40 minutes.',
-            'Whip with electric beaters for 2–3 minutes until fluffy, adding the essential oils halfway through.',
-            'Spoon into a wide-mouth jar.',
-            'To use: massage into clean feet at night, concentrating on heels, then cover with cotton socks and sleep on it.'
-        ],
-        tips: [
-            'The sock step is not optional if you value your sheets',
-            'For cracked heels, exfoliate first — the pumice-then-butter combo is what actually works',
-            'Skip tea tree if pregnant or if skin is broken — plain peppermint is fine',
-            'Shelf life: 6+ months. Anhydrous — keep water out of the jar and scoop with dry hands.'
-        ]
-    },
-    solidperfume: {
-        name: 'Solid Perfume',
-        subtitle: 'Pocket-sized scent in a slide tin',
-        difficulty: 'Easy',
-        time: '15 min',
-        base: {
-            'Jojoba Oil': { metric: 12, imperial: 2.5, unit: { metric: 'g', imperial: 'tsp' } },
-            'Beeswax': { metric: 6, imperial: 1.5, unit: { metric: 'g', imperial: 'tsp' } },
-            'Essential Oil Blend': { metric: 40, imperial: 40, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Jojoba Oil': 'The classic perfume carrier — nearly odorless and never goes rancid on you',
-            'Beeswax': 'Sets the perfume; equal parts wax to oil gives a firmer travel-safe texture',
-            'Essential Oil Blend': 'Build it like a chord: roughly 3 parts top note (bergamot, sweet orange), 2 parts heart (lavender, geranium, ylang ylang), 1 part base (cedarwood, vanilla, sandalwood). ~10% total fragrance is the ceiling for leave-on skin products — this recipe sits just under it.'
-        },
-        sections: {},
-        batchSize: { metric: 20, imperial: 1, unit: { metric: 'g', imperial: 'tin' } },
-        instructions: [
-            'Blend your essential oils first in a small dish and let them sit 10 minutes — smell again before committing; blends shift as they marry.',
-            'Melt the beeswax and jojoba together in a double boiler.',
-            'Remove from heat, cool 1 minute, then stir in the oil blend.',
-            'Pour immediately into a small slide tin or lip balm pot.',
-            'Set 30 minutes. To wear: warm a fingertip on the surface and press onto pulse points.'
-        ],
-        tips: [
-            'Solid perfume sits close to the skin — it is for you and people at conversation distance, not the whole room',
-            'Citrus top notes fade first; refresh a citrus-heavy tin every few months',
-            'Avoid phototoxic oils on sun-exposed skin: cold-pressed bergamot, lime, and lemon. Bergamot FCF and distilled lime are the safe versions.',
-            'Shelf life: ~1 year. Jojoba is exceptionally stable — the scent will fade before the base spoils.'
-        ]
-    },
-    coldprocess: {
-        name: 'Cold Process Soap — Classic Bar',
-        subtitle: 'The real thing, from scratch · 5% superfat · ⚠ works with lye',
-        difficulty: 'Advanced',
-        time: '90 min + 4–6 week cure',
-        base: {
-            'Olive Oil': { metric: 450, imperial: 15.9, unit: { metric: 'g', imperial: 'oz' } },
-            'Coconut Oil': { metric: 250, imperial: 8.8, unit: { metric: 'g', imperial: 'oz' } },
-            'Shea Butter': { metric: 100, imperial: 3.5, unit: { metric: 'g', imperial: 'oz' } },
-            'Sodium Hydroxide (Lye)': { metric: 112, imperial: 3.95, unit: { metric: 'g', imperial: 'oz' } },
-            'Distilled Water': { metric: 264, imperial: 9.3, unit: { metric: 'g', imperial: 'oz' } },
-            'Lavender Essential Oil': { metric: 24, imperial: 0.85, unit: { metric: 'g', imperial: 'oz' } }
-        },
-        info: {
-            'Olive Oil': 'Gentle, conditioning heart of the bar (56% of oils)',
-            'Coconut Oil': 'Hardness and big bubbly lather (31%)',
-            'Shea Butter': 'Creamy stability (13%)',
-            'Sodium Hydroxide (Lye)': 'Calculated for exactly these oils at 5% superfat. If you change ANY oil or amount, you must re-run the recipe through a lye calculator (SoapCalc, soapee.com) — never guess lye. Buy 100% pure NaOH with no additives.',
-            'Distilled Water': 'Weigh it — this is a 2.4:1 water-to-lye ratio. Everything in soapmaking is measured by weight, never volume, including in imperial.',
-            'Lavender Essential Oil': 'Optional, added at trace (3% of oils)'
-        },
-        sections: { 'Olive Oil': 'Oil Phase', 'Sodium Hydroxide (Lye)': 'Lye Solution — handle with care', 'Lavender Essential Oil': 'At Trace (optional)' },
-        batchSize: { metric: 1200, imperial: 9, unit: { metric: 'g', imperial: 'bars' } },
-        instructions: [
-            'SAFETY FIRST: goggles, gloves, long sleeves, closed shoes. Work ventilated, with no kids or pets in the room. Keep vinegar handy for neutralizing splashes on surfaces — but flush skin contact with plenty of running water, not vinegar.',
-            'Weigh the water into a heatproof pitcher. ALWAYS ADD LYE TO WATER, NEVER WATER TO LYE. Sprinkle the lye in slowly, stirring gently — it will heat to ~90°C and fume briefly. Do not lean over it. Set aside somewhere safe to cool.',
-            'Melt the coconut oil and shea butter, combine with the olive oil in your soaping pot.',
-            'Wait until both the oils and the lye solution have cooled to 38–43°C (100–110°F) — a cheap infrared thermometer makes this easy.',
-            'Pour the lye solution into the oils. Blend with a stick blender in short bursts, stirring between, until "trace" — the mixture thickens enough that drizzles sit briefly on the surface, like thin custard.',
-            'Stir in the essential oil by hand, then pour into a lined loaf mold and tap to release air bubbles.',
-            'Cover, wrap in a towel, and leave undisturbed 24–48 hours.',
-            'Wearing gloves (young soap is still caustic), unmold and cut into bars.',
-            'Cure on a rack with airflow for 4–6 weeks, turning weekly. Curing is not optional — it completes saponification and evaporates water for a hard, mild, long-lasting bar.'
-        ],
-        tips: [
-            'Read the full method twice and stage every tool before touching the lye',
-            'Use stainless steel, silicone, or sturdy plastic — never aluminum, which reacts violently with lye',
-            'Dedicate your soaping tools; don\'t reuse them for food',
-            'A zap-test or pH strips (target 9–10) after cure confirms the bar is skin-ready',
-            'Shelf life: 1+ year after cure. Bars get harder and milder with age — many soapers consider 6-month-old bars the best ones.'
-        ]
-    },
-    showersteamers: {
-        name: 'Eucalyptus Shower Steamers',
-        subtitle: 'Bath bomb energy, no bathtub required',
-        difficulty: 'Medium',
-        time: '30 min + 24 h drying',
-        base: {
-            'Baking Soda': { metric: 240, imperial: 1, unit: { metric: 'g', imperial: 'cup' } },
-            'Citric Acid': { metric: 120, imperial: 0.5, unit: { metric: 'g', imperial: 'cup' } },
-            'Cornstarch': { metric: 30, imperial: 3, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Witch Hazel (in spray bottle)': { metric: 15, imperial: 1, unit: { metric: 'g', imperial: 'tbsp' } },
-            'Eucalyptus Essential Oil': { metric: 60, imperial: 60, unit: { metric: 'drops', imperial: 'drops' } },
-            'Peppermint Essential Oil': { metric: 30, imperial: 30, unit: { metric: 'drops', imperial: 'drops' } }
-        },
-        info: {
-            'Baking Soda': 'Same fizz chemistry as bath bombs — 2:1 soda to citric acid',
-            'Cornstarch': 'Slows the fizz so the steamer lasts the whole shower',
-            'Witch Hazel (in spray bottle)': 'Binds the mix without triggering the fizz the way plain water would. Spray, never pour.',
-            'Eucalyptus Essential Oil': 'This is a far higher essential oil load than a bath bomb — that\'s the point. Steamers perfume the steam, they never touch your skin.',
-            'Peppermint Essential Oil': 'The wake-up half of the blend'
-        },
-        sections: { 'Baking Soda': 'Dry Ingredients', 'Witch Hazel (in spray bottle)': 'Wet Ingredients' },
-        batchSize: { metric: 6, imperial: 6, unit: { metric: 'steamers', imperial: 'steamers' } },
-        instructions: [
-            'Whisk the baking soda, citric acid, and cornstarch until completely uniform.',
-            'Add the essential oils while whisking fast to prevent fizzing.',
-            'Spritz witch hazel 2–3 sprays at a time, mixing between rounds, until a squeezed handful just holds its shape like damp snow.',
-            'Pack very firmly into silicone molds or a mini muffin tin.',
-            'Dry 24 hours, unmold gently, then dry another 24 hours before storing airtight.',
-            'To use: place on the shower floor toward the back, out of the direct stream. A splash of water starts it; steam does the rest.'
-        ],
-        tips: [
-            'These are NOT bath bombs — the essential oil concentration is not skin-safe for a soak. Shower floor only.',
-            'Humid day? Postpone. The mix will swell and self-fizz.',
-            'Congestion blend shown; try lavender + cedarwood for an evening version',
-            'Shelf life: ~6 months airtight. The scent fades before the fizz does — add a couple of fresh EO drops on top of an older steamer.'
-        ]
+        shelfLife: '3–6 months. Contains coconut oil — store in a cool place to maintain consistency.'
     }
 };
 
-const state = {};
-Object.keys(recipes).forEach(key => {
-    state[key] = { isMetric: true, scale: 1 };
-});
+// ————— Units —————
+// Every amount is stored once, in grams (or drops, capsules, pinches).
+// The imperial and percent views are computed from the grams, so they can never disagree.
+const G_PER_OZ = 28.349523125;
+const G_PER_DROP = 0.04;      // ~25 drops per ml of essential oil; only used for yields and percentages
+const G_PER_CAPSULE = 0.4;    // contents of a typical vitamin E softgel
+const G_PER_PINCH = 0.3;
+const SMALL_AMOUNT_G = 10;    // below this, imperial view keeps grams: ounce readouts are too coarse
+const UNIT_MODES = ['metric', 'imperial', 'percent'];
+const UNIT_LABELS = { metric: 'Metric', imperial: 'Imperial', percent: 'Percent' };
+const UNIT_NAMES = { metric: 'metric units', imperial: 'imperial units', percent: 'percentages' };
+const UNIT_HINTS = {
+    metric: '',
+    imperial: 'Ounces are by weight. Amounts under 10 g stay in grams for accuracy.',
+    percent: 'Share of the total batch weight. Drops count as about 0.04 g each.'
+};
 
-// ————— Category map: sub-tab ID → parent tab ID (for live region context) —————
-const tabOrder = ['skincare','haircare','bodycare','bathtime','lipcare','soaps','deodorants'];
+const STORAGE_KEY_THEME = 'homesoaps-theme';
+const STORAGE_KEY_LASTTAB = 'homesoaps-lasttab';
+const STORAGE_KEY_UNITS = 'homesoaps-units';
+const STORAGE_KEY_CHECKS = 'homesoaps-checks';
 
-// ————— Live region helper —————
+let units = 'metric';
+const scales = {};                 // recipe key → batch multiplier
+const rendered = new Set();        // recipes whose markup has been built
+const lastRecipeInCategory = {};   // category id → recipe key last shown
+
+// ————— Icons —————
+const ICON_WARN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+const ICON_WARN_SMALL = ICON_WARN.replace('width="18" height="18"', 'width="14" height="14"');
+const ICON_CLOCK = '<svg class="shelf-life-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const ICON_BULB = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.4 1 1.1 1 1.8v.5h6v-.5c0-.7.4-1.4 1-1.8A7 7 0 0 0 12 2Z"/></svg>';
+const ICON_DROP = '<svg class="section-title-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-2 4-5 5-5 9a5 5 0 0 0 10 0c0-4-3-5-5-9Z"/><path d="M12 12v8"/></svg>';
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 10 18 20 6"/></svg>';
+
+// ————— Live region —————
 function announce(msg){
     const lr = document.getElementById('liveRegion');
     if (!lr) return;
-    // clear then set — forces re-announcement for identical messages
+    // clear then set, so an identical message is announced again
     lr.textContent = '';
     setTimeout(() => { lr.textContent = msg; }, 30);
 }
 
-// ————— Formatting —————
-function formatAmount(amount, unit) {
-    if (unit === 'drops' || unit === 'capsule' || unit === 'pinch') {
-        return Math.round(amount) + ' ' + unit;
+// ————— Amounts and formatting —————
+function weightOf(ing){
+    if (ing.g != null) return ing.g;
+    if (ing.drops != null) return ing.drops * G_PER_DROP;
+    if (ing.capsules != null) return ing.capsules * G_PER_CAPSULE;
+    if (ing.pinches != null) return ing.pinches * G_PER_PINCH;
+    return 0; // "as needed"
+}
+function batchWeight(recipe){
+    return recipe.ingredients.reduce((sum, ing) => ing.group ? sum : sum + weightOf(ing), 0);
+}
+function trimNumber(n, decimals){
+    return String(parseFloat(n.toFixed(decimals)));
+}
+function formatHalves(n){
+    const whole = Math.floor(n);
+    if (Math.abs(n - whole - 0.5) < 1e-9) return whole === 0 ? '½' : `${whole}½`;
+    return trimNumber(n, 1);
+}
+function countLabel(n, singular, plural){
+    return `${formatHalves(n)} ${n > 1 ? (plural || singular + 's') : singular}`;
+}
+function formatGrams(g){
+    if (g < 0.1) return trimNumber(g, 2) + ' g';
+    if (g < 100) return trimNumber(g, 1) + ' g';
+    return Math.round(g) + ' g';
+}
+function formatOz(g){
+    const oz = g / G_PER_OZ;
+    return trimNumber(oz, oz < 1 ? 2 : 1) + ' oz';
+}
+function formatPercent(p){
+    if (p >= 1) return trimNumber(p, 1) + '%';
+    if (p >= 0.01) return trimNumber(p, 2) + '%';
+    return '<0.01%';
+}
+function amountText(ing, scale, total){
+    if (ing.asNeeded) return 'as needed';
+    if (units === 'percent'){
+        return (ing.g == null ? '≈ ' : '') + formatPercent(100 * weightOf(ing) / total);
     }
-    if (unit === '%') {
-        return (Number.isInteger(amount) ? amount : amount.toFixed(1)) + '%';
-    }
-    if (amount < 0.1) return amount.toFixed(2) + ' ' + unit;
-    if (amount < 1) return amount.toFixed(1) + ' ' + unit;
-    if (Number.isInteger(amount)) return amount + ' ' + unit;
-    return amount.toFixed(1) + ' ' + unit;
+    if (ing.drops != null) return countLabel(Math.max(1, Math.round(ing.drops * scale)), 'drop');
+    if (ing.capsules != null) return countLabel(ing.capsules * scale, 'capsule');
+    if (ing.pinches != null) return countLabel(ing.pinches * scale, 'pinch', 'pinches');
+    const g = ing.g * scale;
+    return (units === 'imperial' && g >= SMALL_AMOUNT_G) ? formatOz(g) : formatGrams(g);
 }
 
-// ————— Kitchen mode: tick off ingredients & steps (persisted per recipe) —————
-const STORAGE_KEY_CHECKS = 'homesoaps-checks';
-
+// ————— Kitchen mode: tick off ingredients & steps (saved per recipe) —————
 function loadAllChecks(){
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY_CHECKS)) || {}; } catch(e){ return {}; }
 }
-function getChecks(recipeKey){
-    const all = loadAllChecks();
-    const c = all[recipeKey];
+function getChecks(key){
+    const c = loadAllChecks()[key];
     return (c && Array.isArray(c.ingredients) && Array.isArray(c.steps)) ? c : { ingredients: [], steps: [] };
 }
-function setChecks(recipeKey, checks){
+function setChecks(key, checks){
     const all = loadAllChecks();
-    all[recipeKey] = checks;
+    all[key] = checks;
     try { localStorage.setItem(STORAGE_KEY_CHECKS, JSON.stringify(all)); } catch(e){}
 }
-function toggleIngredientCheck(recipeKey, name, card){
-    const checks = getChecks(recipeKey);
+function toggleIngredientCheck(key, card){
+    const name = recipes[key].ingredients[+card.dataset.idx].name;
+    const checks = getChecks(key);
     const pos = checks.ingredients.indexOf(name);
     const nowChecked = pos === -1;
     if (nowChecked) checks.ingredients.push(name); else checks.ingredients.splice(pos, 1);
-    setChecks(recipeKey, checks);
+    setChecks(key, checks);
     card.classList.toggle('checked', nowChecked);
     card.querySelector('.check-btn').setAttribute('aria-pressed', String(nowChecked));
 }
-function toggleStepCheck(recipeKey, idx, li){
-    const checks = getChecks(recipeKey);
+function toggleStepCheck(key, li){
+    const idx = parseInt(li.dataset.step, 10);
+    const checks = getChecks(key);
     const pos = checks.steps.indexOf(idx);
     const nowChecked = pos === -1;
     if (nowChecked) checks.steps.push(idx); else checks.steps.splice(pos, 1);
-    setChecks(recipeKey, checks);
+    setChecks(key, checks);
     li.classList.toggle('checked', nowChecked);
     li.setAttribute('aria-checked', String(nowChecked));
 }
-function applyStepChecks(recipeKey, container){
-    const done = getChecks(recipeKey).steps;
-    container.querySelectorAll('.instruction-step').forEach(li => {
-        const on = done.includes(parseInt(li.dataset.step, 10));
+function applyChecks(key){
+    const root = document.getElementById(`recipe-${key}`);
+    if (!root) return;
+    const checks = getChecks(key);
+    root.querySelectorAll('.ingredient-card').forEach(card => {
+        const on = checks.ingredients.includes(recipes[key].ingredients[+card.dataset.idx].name);
+        card.classList.toggle('checked', on);
+        card.querySelector('.check-btn').setAttribute('aria-pressed', String(on));
+    });
+    root.querySelectorAll('.instruction-step').forEach(li => {
+        const on = checks.steps.includes(parseInt(li.dataset.step, 10));
         li.classList.toggle('checked', on);
         li.setAttribute('aria-checked', String(on));
     });
 }
-function clearChecks(recipeKey){
-    setChecks(recipeKey, { ingredients: [], steps: [] });
-    updateIngredients(recipeKey);
-    const container = document.querySelector(`.recipe-content[data-recipe="${recipeKey}"]`);
-    if (container) applyStepChecks(recipeKey, container);
+function clearChecks(key){
+    setChecks(key, { ingredients: [], steps: [] });
+    applyChecks(key);
     announce('All ticks cleared');
 }
 
 // ————— Theme —————
-const STORAGE_KEY_THEME = 'homesoaps-theme';
-const STORAGE_KEY_LASTTAB = 'homesoaps-lasttab';
-
 function applyTheme(isDark){
     document.body.classList.toggle('dark', isDark);
     const btn = document.getElementById('themeBtn');
@@ -2442,369 +2303,334 @@ function applyTheme(isDark){
         btn.setAttribute('aria-pressed', String(isDark));
     }
 }
-
-function toggleTheme() {
+function toggleTheme(){
     const willBeDark = !document.body.classList.contains('dark');
     applyTheme(willBeDark);
     try { localStorage.setItem(STORAGE_KEY_THEME, willBeDark ? 'dark' : 'light'); } catch(e){}
     announce(willBeDark ? 'Dark mode enabled' : 'Light mode enabled');
 }
-
 function initTheme(){
     let theme = null;
     try { theme = localStorage.getItem(STORAGE_KEY_THEME); } catch(e){}
-    if (theme === 'dark' || theme === 'light'){
-        applyTheme(theme === 'dark');
-    } else {
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        applyTheme(prefersDark);
-    }
+    if (theme === 'dark' || theme === 'light') applyTheme(theme === 'dark');
+    else applyTheme(!!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
 }
 
-// ————— Tabs (with keyboard arrow nav following ARIA authoring practices) —————
-function switchTab(tabId, btn) {
-    document.querySelectorAll('.tab').forEach(t => {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected','false');
-        t.setAttribute('tabindex','-1');
-    });
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-    btn.classList.add('active');
-    btn.setAttribute('aria-selected','true');
-    btn.setAttribute('tabindex','0');
-    document.getElementById(tabId).classList.add('active');
-
-    // Swap category theme
-    document.body.setAttribute('data-cat', tabId);
-
-    // Persist
-    try { localStorage.setItem(STORAGE_KEY_LASTTAB, tabId); } catch(e){}
-
-    // Activate first sub-tab
-    const firstSubTab = document.querySelector(`#${tabId} .sub-tab`);
-    if (firstSubTab) {
-        const m = firstSubTab.getAttribute('onclick').match(/'([^']+)'/g);
-        if (m && m[1]) {
-            const subId = m[1].replace(/'/g, '');
-            switchSubTab(tabId, subId, firstSubTab);
-        }
-    }
+// ————— Units (one choice for the whole site, remembered between visits) —————
+function loadUnits(){
+    let saved = null;
+    try { saved = localStorage.getItem(STORAGE_KEY_UNITS); } catch(e){}
+    if (UNIT_MODES.includes(saved)) units = saved;
 }
-
-function switchSubTab(tabId, subId, btn) {
-    const parent = document.getElementById(tabId);
-    parent.querySelectorAll('.sub-tab').forEach(t => {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected','false');
-    });
-    parent.querySelectorAll('.sub-content').forEach(c => c.classList.remove('active'));
-
-    btn.classList.add('active');
-    btn.setAttribute('aria-selected','true');
-    document.getElementById(`${tabId}-${subId}`).classList.add('active');
-
-    const container = document.querySelector(`#${tabId}-${subId} .recipe-content`);
-    if (container && container.innerHTML === '') {
-        renderRecipe(subId, container);
-    }
-
-    // Keep the URL shareable: #category/recipe (replaceState avoids history spam)
-    try { history.replaceState(null, '', `#${tabId}/${subId}`); } catch(e){}
+function setUnits(mode, announceIt){
+    if (!UNIT_MODES.includes(mode) || mode === units) return;
+    units = mode;
+    try { localStorage.setItem(STORAGE_KEY_UNITS, mode); } catch(e){}
+    rendered.forEach(key => { syncUnitsControl(key); updateAmounts(key); });
+    if (announceIt) announce(`Showing ${UNIT_NAMES[mode]}`);
 }
-
-// ————— Deep links: #category/recipe —————
-function applyLocationHash(){
-    const m = (location.hash || '').match(/^#([a-z]+)\/([a-z0-9]+)$/);
-    if (!m || !tabOrder.includes(m[1])) return false;
-    const tabBtn = document.querySelector(`.tab[data-tab="${m[1]}"]`);
-    const subBtn = document.querySelector(`#${m[1]} .sub-tab[onclick*="'${m[2]}'"]`);
-    if (!tabBtn || !subBtn) return false;
-    switchTab(m[1], tabBtn);
-    if (!subBtn.classList.contains('active')) {
-        switchSubTab(m[1], m[2], subBtn);
-    }
-    return true;
-}
-window.addEventListener('hashchange', applyLocationHash);
-
-// Keyboard arrow-key nav on main tab list (standard ARIA pattern)
-function setupTabKeyboardNav(){
-    const tabs = Array.from(document.querySelectorAll('#mainTabs .tab'));
-    tabs.forEach((tab, idx) => {
-        tab.addEventListener('keydown', (e) => {
-            let target = null;
-            if (e.key === 'ArrowRight'){ target = tabs[(idx + 1) % tabs.length]; }
-            else if (e.key === 'ArrowLeft'){ target = tabs[(idx - 1 + tabs.length) % tabs.length]; }
-            else if (e.key === 'Home'){ target = tabs[0]; }
-            else if (e.key === 'End'){ target = tabs[tabs.length - 1]; }
-            if (target){
-                e.preventDefault();
-                target.focus();
-                target.click();
-            }
-        });
-    });
-
-    // Sub-tabs: arrow nav within the active tab panel
-    document.querySelectorAll('.tab-content').forEach(panel => {
-        const subs = Array.from(panel.querySelectorAll('.sub-tab'));
-        subs.forEach((sub, idx) => {
-            sub.addEventListener('keydown', (e) => {
-                let target = null;
-                if (e.key === 'ArrowRight'){ target = subs[(idx + 1) % subs.length]; }
-                else if (e.key === 'ArrowLeft'){ target = subs[(idx - 1 + subs.length) % subs.length]; }
-                else if (e.key === 'Home'){ target = subs[0]; }
-                else if (e.key === 'End'){ target = subs[subs.length - 1]; }
-                if (target){
-                    e.preventDefault();
-                    target.focus();
-                    target.click();
-                }
-            });
-        });
+function syncUnitsControl(key){
+    const ctl = document.querySelector(`#recipe-${key} [data-units-control]`);
+    if (!ctl) return;
+    ctl.dataset.active = units;
+    ctl.querySelectorAll('[data-units]').forEach(b => {
+        const on = b.dataset.units === units;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-checked', String(on));
+        b.tabIndex = on ? 0 : -1;
     });
 }
 
-// Wire up ARIA roles and initial states that aren't already in the markup
-function setupAriaStructure(){
-    // Main tab panels
-    document.querySelectorAll('.tab-content').forEach(panel => {
-        const id = panel.id;
-        panel.setAttribute('role', 'tabpanel');
-        panel.setAttribute('aria-labelledby', `tab-${id}`);
-        panel.setAttribute('tabindex', '0');
+// ————— Batch size —————
+function setScale(key, value, { announceIt = false, fromSlider = false } = {}){
+    const v = parseFloat(value);
+    scales[key] = v;
+    const root = document.getElementById(`recipe-${key}`);
+    const slider = root.querySelector('.scale-slider');
+    if (!fromSlider) slider.value = v;
+    slider.setAttribute('aria-valuetext', `${v} times base batch`);
+    const display = document.getElementById(`${key}-scale-display`);
+    display.innerHTML = `${v}&times;`;
+    display.classList.remove('bump');
+    void display.offsetWidth; // restart the bump animation
+    display.classList.add('bump');
+    root.querySelectorAll('.preset-btn').forEach(b => {
+        const on = parseFloat(b.dataset.preset) === v;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
     });
-    // Sub-tabs: set aria-selected based on current active state
-    document.querySelectorAll('.sub-tab').forEach(sub => {
-        sub.setAttribute('aria-selected', sub.classList.contains('active') ? 'true' : 'false');
-    });
-    // Sub-content panels
-    document.querySelectorAll('.sub-content').forEach(panel => {
-        panel.setAttribute('role', 'tabpanel');
-    });
+    updateAmounts(key);
+    if (announceIt) announce(`Batch scale set to ${v} times`);
 }
 
 // ————— Recipe rendering —————
-function renderRecipe(recipeKey, container) {
-    const recipe = recipes[recipeKey];
-    if (!recipe) return;
-
+function renderRecipe(key, container){
+    const r = recipes[key];
+    const s = scales[key];
     container.innerHTML = `
         <div class="recipe-header">
-            <h2 class="recipe-title">${recipe.name}</h2>
-            <p class="recipe-subtitle">${recipe.subtitle}</p>
+            <h2 class="recipe-title">${r.name}</h2>
+            <p class="recipe-subtitle">${r.subtitle}</p>
             <div class="badge-row">
-                <span class="badge"><span class="badge-dot" aria-hidden="true"></span>${recipe.difficulty}</span>
-                <span class="badge"><span class="badge-dot" aria-hidden="true"></span>${recipe.time}</span>
+                <span class="badge"><span class="badge-dot" aria-hidden="true"></span>${r.difficulty}</span>
+                <span class="badge"><span class="badge-dot" aria-hidden="true"></span>${r.time}</span>
             </div>
         </div>
 
         <div class="controls-card">
             <div class="controls-row">
                 <div class="control-group">
-                    <span class="control-label">Units</span>
-                    <div class="toggle-switch ${state[recipeKey].isMetric ? '' : 'imperial'}" role="switch" tabindex="0" aria-checked="${state[recipeKey].isMetric}" aria-label="Unit system: metric or imperial" onclick="toggleUnits('${recipeKey}', this)" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleUnits('${recipeKey}', this);}">
-                        <div class="toggle-track"></div>
-                        <div class="toggle-option left ${state[recipeKey].isMetric ? 'active' : ''}">Metric</div>
-                        <div class="toggle-option right ${!state[recipeKey].isMetric ? 'active' : ''}">Imperial</div>
+                    <span class="control-label" id="${key}-units-label">Units</span>
+                    <div class="segmented" role="radiogroup" aria-labelledby="${key}-units-label" data-units-control>
+                        <span class="segmented-thumb" aria-hidden="true"></span>
+                        ${UNIT_MODES.map(mode => `<button type="button" class="segmented-option" role="radio" aria-checked="false" data-units="${mode}">${UNIT_LABELS[mode]}</button>`).join('')}
                     </div>
                 </div>
                 <div class="control-group">
-                    <span class="control-label" id="${recipeKey}-batch-label">Batch Size</span>
+                    <span class="control-label" id="${key}-batch-label">Batch Size</span>
                     <div class="scale-control">
-                        <input type="range" class="scale-slider" min="0.5" max="4" step="0.5" value="${state[recipeKey].scale}"
-                               aria-labelledby="${recipeKey}-batch-label"
-                               aria-valuetext="${state[recipeKey].scale} times base batch"
-                               onchange="updateScale('${recipeKey}', this.value, true)" oninput="updateScaleDisplay('${recipeKey}', this.value); updateScale('${recipeKey}', this.value, false);">
-                        <span class="scale-value" id="${recipeKey}-scale-display">${state[recipeKey].scale}&times;</span>
+                        <input type="range" class="scale-slider" min="0.5" max="4" step="0.5" value="${s}"
+                               aria-labelledby="${key}-batch-label" aria-valuetext="${s} times base batch" data-recipe="${key}">
+                        <span class="scale-value" id="${key}-scale-display">${s}&times;</span>
                     </div>
                     <div class="preset-buttons" role="group" aria-label="Quick batch size presets">
-                        <button class="preset-btn ${state[recipeKey].scale === 0.5 ? 'active' : ''}" onclick="setPreset('${recipeKey}', 0.5)">0.5&times;</button>
-                        <button class="preset-btn ${state[recipeKey].scale === 1 ? 'active' : ''}" onclick="setPreset('${recipeKey}', 1)">1&times;</button>
-                        <button class="preset-btn ${state[recipeKey].scale === 2 ? 'active' : ''}" onclick="setPreset('${recipeKey}', 2)">2&times;</button>
-                        <button class="preset-btn ${state[recipeKey].scale === 3 ? 'active' : ''}" onclick="setPreset('${recipeKey}', 3)">3&times;</button>
-                        <button class="preset-btn ${state[recipeKey].scale === 4 ? 'active' : ''}" onclick="setPreset('${recipeKey}', 4)">4&times;</button>
+                        ${[0.5, 1, 2, 3, 4].map(v => `<button type="button" class="preset-btn${v === s ? ' active' : ''}" aria-pressed="${v === s}" data-preset="${v}">${v}&times;</button>`).join('')}
                     </div>
                 </div>
             </div>
-            <div class="yield-info" id="${recipeKey}-yield"></div>
+            <p class="yield-info" id="${key}-yield"></p>
+            <p class="units-hint" id="${key}-units-hint" hidden></p>
         </div>
 
-        <section class="ingredients-section" aria-labelledby="${recipeKey}-ingredients-heading">
-            <h3 class="section-title" id="${recipeKey}-ingredients-heading">
-                <svg class="section-title-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M12 3c-2 4-5 5-5 9a5 5 0 0 0 10 0c0-4-3-5-5-9Z"/>
-                    <path d="M12 12v8"/>
-                </svg>
-                Ingredients
-            </h3>
-            <div class="ingredients-grid" id="${recipeKey}-ingredients"></div>
+        ${r.safety ? `
+        <div class="callout-warn" role="note" aria-label="Safety">
+            ${ICON_WARN}
+            <div>
+                <strong>Safety</strong>
+                <ul>${r.safety.map(item => `<li>${item}</li>`).join('')}</ul>
+            </div>
+        </div>` : ''}
+
+        <section class="ingredients-section" aria-labelledby="${key}-ingredients-heading">
+            <h3 class="section-title" id="${key}-ingredients-heading">${ICON_DROP}Ingredients</h3>
+            <div class="ingredients-grid" id="${key}-ingredients">
+                ${r.ingredients.map((ing, idx) => ing.group ? `<div class="group-divider">${ing.group}</div>` : ingredientCard(key, ing, idx)).join('')}
+            </div>
         </section>
 
-        <section class="instructions-section" aria-labelledby="${recipeKey}-instructions-heading">
-            <h3 class="instructions-title" id="${recipeKey}-instructions-heading">Method
-                <button class="clear-checks" onclick="clearChecks('${recipeKey}')" title="Uncheck all ingredients and steps">Reset ticks</button>
-            </h3>
+        <section class="instructions-section" aria-labelledby="${key}-method-heading">
+            <div class="instructions-header">
+                <h3 class="instructions-title" id="${key}-method-heading">Method</h3>
+                <button type="button" class="clear-checks" data-clear="${key}" title="Uncheck all ingredients and steps">Reset ticks</button>
+            </div>
             <ol class="instructions-list">
-                ${recipe.instructions.map((step, i) => `<li class="instruction-step" role="checkbox" aria-checked="false" tabindex="0" data-step="${i}">${step}</li>`).join('')}
+                ${r.method.map((step, i) => `<li class="instruction-step" role="checkbox" aria-checked="false" tabindex="0" data-step="${i}">${step}</li>`).join('')}
             </ol>
         </section>
 
-        ${recipe.tips ? `
-        <div class="tips-section" role="note" aria-label="Tips">
-            <div class="tips-title">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M9 18h6"/><path d="M10 22h4"/>
-                    <path d="M12 2a7 7 0 0 0-4 12.7c.6.4 1 1.1 1 1.8v.5h6v-.5c0-.7.4-1.4 1-1.8A7 7 0 0 0 12 2Z"/>
-                </svg>
-                A few notes
-            </div>
-            <ul class="tips-list">
-                ${recipe.tips.filter(t => !t.startsWith('Shelf life:')).map(tip => `<li>${tip}</li>`).join('')}
-            </ul>
-        </div>
-        ${recipe.tips.find(t => t.startsWith('Shelf life:')) ? `
-        <div class="shelf-life-callout" role="note" aria-label="Shelf life">
-            <svg class="shelf-life-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"/>
-                <path d="M12 7v5l3 2"/>
-            </svg>
-            <span>${recipe.tips.find(t => t.startsWith('Shelf life:'))}</span>
+        ${r.notes.length ? `
+        <div class="tips-section" role="note" aria-label="Notes">
+            <div class="tips-title">${ICON_BULB}A few notes</div>
+            <ul class="tips-list">${r.notes.map(note => `<li>${note}</li>`).join('')}</ul>
         </div>` : ''}
-        ` : ''}
+
+        <div class="shelf-life-callout" role="note" aria-label="Shelf life">
+            ${ICON_CLOCK}
+            <span><strong>Shelf life:</strong> ${r.shelfLife}</span>
+        </div>
     `;
-
-    updateIngredients(recipeKey);
-
-    // Tick-off behavior on method steps (click or Enter/Space)
-    container.querySelectorAll('.instruction-step').forEach(li => {
-        const idx = parseInt(li.dataset.step, 10);
-        const toggle = () => toggleStepCheck(recipeKey, idx, li);
-        li.addEventListener('click', toggle);
-        li.addEventListener('keydown', (e) => {
-            if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); toggle(); }
-        });
-    });
-    applyStepChecks(recipeKey, container);
+    rendered.add(key);
+    syncUnitsControl(key);
+    updateAmounts(key);
+    applyChecks(key);
 }
 
-function updateIngredients(recipeKey) {
-    const recipe = recipes[recipeKey];
-    const s = state[recipeKey];
-    const grid = document.getElementById(`${recipeKey}-ingredients`);
-    const yieldEl = document.getElementById(`${recipeKey}-yield`);
+function ingredientCard(key, ing, idx){
+    const infoId = `${key}-info-${idx}`;
+    const long = ing.info && ing.info.length > 80;
+    return `
+        <div class="ingredient-card" data-idx="${idx}">
+            <div class="ingredient-name">${ing.name}</div>
+            <div class="ingredient-amount"></div>
+            ${ing.safety ? `<div class="ingredient-safety">${ICON_WARN_SMALL}<span>${ing.safety}</span></div>` : ''}
+            ${ing.info ? (long
+                ? `<button type="button" class="info-toggle" aria-expanded="false" aria-controls="${infoId}">Show details</button>
+                   <div class="ingredient-info long" id="${infoId}">${ing.info}</div>`
+                : `<div class="ingredient-info">${ing.info}</div>`) : ''}
+            <button type="button" class="check-btn" aria-pressed="false" aria-label="Mark ${ing.name} as ready" title="Tick off">${ICON_CHECK}</button>
+        </div>`;
+}
 
-    if (!grid || !recipe) return;
+function updateAmounts(key){
+    const r = recipes[key];
+    const grid = document.getElementById(`${key}-ingredients`);
+    if (!grid) return;
+    const total = batchWeight(r);
+    grid.querySelectorAll('.ingredient-card').forEach(card => {
+        const ing = r.ingredients[+card.dataset.idx];
+        card.querySelector('.ingredient-amount').textContent = amountText(ing, scales[key], total);
+    });
+    updateYield(key);
+}
 
-    grid.innerHTML = '';
-    let currentSection = '';
+function updateYield(key){
+    const r = recipes[key];
+    const scale = scales[key];
+    const grams = batchWeight(r) * scale;
+    const weight = units === 'imperial' ? formatOz(grams) : Math.round(grams) + ' g';
+    const count = r.makes ? ` (${countLabel(r.makes.count * scale, r.makes.unit)})` : '';
+    document.getElementById(`${key}-yield`).innerHTML =
+        `Makes about <strong>${weight}</strong>${count}<span class="print-only"> · ${scale}&times; batch</span>`;
+    const hint = document.getElementById(`${key}-units-hint`);
+    hint.textContent = UNIT_HINTS[units];
+    hint.hidden = !UNIT_HINTS[units];
+}
 
-    Object.entries(recipe.base).forEach(([name, data], idx) => {
-        if (recipe.sections && recipe.sections[name] && recipe.sections[name] !== currentSection) {
-            currentSection = recipe.sections[name];
-            const divider = document.createElement('div');
-            divider.className = 'group-divider';
-            divider.textContent = currentSection;
-            grid.appendChild(divider);
-        }
+// ————— Navigation: tabs are built from the recipe data —————
+function recipeKeysIn(catId){
+    return Object.keys(recipes).filter(k => recipes[k].category === catId);
+}
 
-        const unit = s.isMetric ? data.unit.metric : data.unit.imperial;
-        // Percentages describe proportions — they don't change with batch size
-        const raw = s.isMetric ? data.metric : data.imperial;
-        const amount = unit === '%' ? raw : raw * s.scale;
+function buildNav(){
+    document.getElementById('mainTabs').innerHTML = CATEGORIES.map(c => `
+        <button type="button" class="tab" role="tab" id="tab-${c.id}" aria-selected="false" aria-controls="${c.id}" tabindex="-1" data-cat="${c.id}">
+            <svg class="tab-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${c.glyph}</svg>
+            ${c.label}
+        </button>`).join('');
 
-        const card = document.createElement('div');
-        card.className = 'ingredient-card';
-        const safeId = `${recipeKey}-info-${idx}`;
-        const info = recipe.info[name];
-        const isLong = info && info.length > 80;
-        const isChecked = getChecks(recipeKey).ingredients.includes(name);
-        if (isChecked) card.classList.add('checked');
+    document.getElementById('main-content').innerHTML = CATEGORIES.map(c => {
+        const keys = recipeKeysIn(c.id);
+        return `
+        <div id="${c.id}" class="tab-content" role="tabpanel" aria-labelledby="tab-${c.id}">
+            <div class="sub-tabs" role="tablist" aria-label="${c.label} recipes">
+                ${keys.map(k => `<button type="button" class="sub-tab" role="tab" id="subtab-${k}" aria-selected="false" aria-controls="recipe-${k}" tabindex="-1" data-recipe="${k}">${recipes[k].tab}</button>`).join('')}
+            </div>
+            ${keys.map(k => `<div id="recipe-${k}" class="sub-content" role="tabpanel" aria-labelledby="subtab-${k}"><div class="recipe-content"></div></div>`).join('')}
+        </div>`;
+    }).join('');
+}
 
-        card.innerHTML = `
-            <div class="ingredient-name">${name}</div>
-            <div class="ingredient-amount">${formatAmount(amount, unit)}</div>
-            ${info ? (isLong
-                ? `<button class="info-toggle" aria-expanded="false" aria-controls="${safeId}">Show details</button>
-                   <div class="ingredient-info long" id="${safeId}">${info}</div>`
-                : `<div class="ingredient-info">${info}</div>`) : ''}
-            <button class="check-btn" aria-pressed="${isChecked}" aria-label="Mark ${name} as ready" title="Tick off">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 10 18 20 6"/></svg>
-            </button>
-        `;
-        card.querySelector('.check-btn').addEventListener('click', () => toggleIngredientCheck(recipeKey, name, card));
-        grid.appendChild(card);
+function showCategory(catId, recipeKey){
+    document.querySelectorAll('#mainTabs .tab').forEach(t => {
+        const on = t.dataset.cat === catId;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+    });
+    document.querySelectorAll('.tab-content').forEach(p => p.classList.toggle('active', p.id === catId));
+    document.body.setAttribute('data-cat', catId);
+    try { localStorage.setItem(STORAGE_KEY_LASTTAB, catId); } catch(e){}
+    showRecipe(recipeKey || lastRecipeInCategory[catId] || recipeKeysIn(catId)[0]);
+}
+
+function showRecipe(key){
+    const cat = recipes[key].category;
+    const panel = document.getElementById(cat);
+    panel.querySelectorAll('.sub-tab').forEach(t => {
+        const on = t.dataset.recipe === key;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+    });
+    panel.querySelectorAll('.sub-content').forEach(c => c.classList.toggle('active', c.id === `recipe-${key}`));
+    lastRecipeInCategory[cat] = key;
+    if (!rendered.has(key)) renderRecipe(key, document.querySelector(`#recipe-${key} .recipe-content`));
+    // Keep the URL shareable: #category/recipe (replaceState avoids history spam)
+    try { history.replaceState(null, '', `#${cat}/${key}`); } catch(e){}
+}
+
+// Deep links: #category/recipe
+function applyLocationHash(){
+    const m = (location.hash || '').match(/^#([a-z]+)\/([a-z0-9]+)$/);
+    if (!m || !recipes[m[2]] || recipes[m[2]].category !== m[1]) return false;
+    showCategory(m[1], m[2]);
+    return true;
+}
+
+// Arrow keys, Home and End move between tabs (ARIA authoring practices)
+function arrowTarget(e, items){
+    const idx = items.indexOf(document.activeElement);
+    if (idx === -1) return null;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') return items[(idx + 1) % items.length];
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') return items[(idx - 1 + items.length) % items.length];
+    if (e.key === 'Home') return items[0];
+    if (e.key === 'End') return items[items.length - 1];
+    return null;
+}
+
+function wireEvents(){
+    const tabs = document.getElementById('mainTabs');
+    tabs.addEventListener('click', e => {
+        const tab = e.target.closest('.tab');
+        if (tab) showCategory(tab.dataset.cat);
+    });
+    tabs.addEventListener('keydown', e => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') return;
+        const target = arrowTarget(e, Array.from(tabs.querySelectorAll('.tab')));
+        if (target){ e.preventDefault(); target.focus(); showCategory(target.dataset.cat); }
     });
 
-    // Wire up info-toggle buttons with proper aria-expanded sync
-    grid.querySelectorAll('.info-toggle').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const panel = btn.nextElementSibling;
+    const main = document.getElementById('main-content');
+    main.addEventListener('click', e => {
+        const subTab = e.target.closest('.sub-tab');
+        if (subTab){ showRecipe(subTab.dataset.recipe); return; }
+
+        const recipeRoot = e.target.closest('.sub-content');
+        if (!recipeRoot) return;
+        const key = recipeRoot.id.replace('recipe-', '');
+
+        const unitBtn = e.target.closest('[data-units]');
+        if (unitBtn){ setUnits(unitBtn.dataset.units, true); return; }
+
+        const preset = e.target.closest('.preset-btn');
+        if (preset){ setScale(key, preset.dataset.preset, { announceIt: true }); return; }
+
+        const clear = e.target.closest('.clear-checks');
+        if (clear){ clearChecks(key); return; }
+
+        const info = e.target.closest('.info-toggle');
+        if (info){
+            const panel = document.getElementById(info.getAttribute('aria-controls'));
             const open = !panel.classList.contains('open');
             panel.classList.toggle('open', open);
-            btn.setAttribute('aria-expanded', String(open));
-            btn.textContent = open ? 'Hide details' : 'Show details';
-        });
+            info.setAttribute('aria-expanded', String(open));
+            info.textContent = open ? 'Hide details' : 'Show details';
+            return;
+        }
+
+        const check = e.target.closest('.check-btn');
+        if (check){ toggleIngredientCheck(key, check.closest('.ingredient-card')); return; }
+
+        const step = e.target.closest('.instruction-step');
+        if (step) toggleStepCheck(key, step);
     });
 
-    if (yieldEl) {
-        const batchSize = s.isMetric ? recipe.batchSize.metric : recipe.batchSize.imperial;
-        const batchUnit = s.isMetric ? recipe.batchSize.unit.metric : recipe.batchSize.unit.imperial;
-        const totalYield = batchSize * s.scale;
-        yieldEl.innerHTML = `Makes approximately <strong>${formatAmount(totalYield, batchUnit)}</strong>`;
-    }
-}
+    main.addEventListener('keydown', e => {
+        const subTab = e.target.closest('.sub-tab');
+        if (subTab){
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') return;
+            const target = arrowTarget(e, Array.from(subTab.parentElement.querySelectorAll('.sub-tab')));
+            if (target){ e.preventDefault(); target.focus(); showRecipe(target.dataset.recipe); }
+            return;
+        }
+        const unitBtn = e.target.closest('[data-units]');
+        if (unitBtn){
+            const target = arrowTarget(e, Array.from(unitBtn.parentElement.querySelectorAll('[data-units]')));
+            if (target){ e.preventDefault(); setUnits(target.dataset.units, true); target.focus(); }
+            return;
+        }
+        const step = e.target.closest('.instruction-step');
+        if (step && (e.key === ' ' || e.key === 'Enter')){
+            e.preventDefault();
+            toggleStepCheck(step.closest('.sub-content').id.replace('recipe-', ''), step);
+        }
+    });
 
-function toggleUnits(recipeKey, element) {
-    state[recipeKey].isMetric = !state[recipeKey].isMetric;
-    element.classList.toggle('imperial');
-    element.setAttribute('aria-checked', String(state[recipeKey].isMetric));
-    element.querySelector('.toggle-option.left').classList.toggle('active');
-    element.querySelector('.toggle-option.right').classList.toggle('active');
-    updateIngredients(recipeKey);
-    announce(`Switched to ${state[recipeKey].isMetric ? 'metric' : 'imperial'} units`);
-}
-
-function updateScale(recipeKey, value, announceChange) {
-    state[recipeKey].scale = parseFloat(value);
-    updateIngredients(recipeKey);
-    updatePresetButtons(recipeKey);
-    const slider = document.querySelector(`#${recipeKey}-ingredients`)?.closest('.sub-content')?.querySelector('.scale-slider');
-    if (slider) slider.setAttribute('aria-valuetext', `${state[recipeKey].scale} times base batch`);
-    if (announceChange){
-        announce(`Batch scale set to ${state[recipeKey].scale} times`);
-    }
-}
-
-function updateScaleDisplay(recipeKey, value) {
-    const el = document.getElementById(`${recipeKey}-scale-display`);
-    if (!el) return;
-    el.innerHTML = value + '&times;';
-    // Bump animation on change
-    el.classList.remove('bump');
-    void el.offsetWidth;  // restart
-    el.classList.add('bump');
-}
-
-function setPreset(recipeKey, value) {
-    state[recipeKey].scale = value;
-    const slider = document.querySelector(`#${recipeKey}-ingredients`).closest('.sub-content').querySelector('.scale-slider');
-    if (slider) {
-        slider.value = value;
-        slider.setAttribute('aria-valuetext', `${value} times base batch`);
-    }
-    updateScaleDisplay(recipeKey, value);
-    updateIngredients(recipeKey);
-    updatePresetButtons(recipeKey);
-    announce(`Batch scale set to ${value} times`);
-}
-
-function updatePresetButtons(recipeKey) {
-    const container = document.querySelector(`#${recipeKey}-ingredients`).closest('.sub-content');
-    container.querySelectorAll('.preset-btn').forEach(btn => {
-        const val = parseFloat(btn.textContent);
-        btn.classList.toggle('active', val === state[recipeKey].scale);
+    main.addEventListener('input', e => {
+        if (e.target.classList.contains('scale-slider')) setScale(e.target.dataset.recipe, e.target.value, { fromSlider: true });
+    });
+    main.addEventListener('change', e => {
+        if (e.target.classList.contains('scale-slider')) announce(`Batch scale set to ${e.target.value} times`);
     });
 }
 
@@ -2824,26 +2650,21 @@ if (window.matchMedia){
     });
 }
 
+window.addEventListener('hashchange', applyLocationHash);
+
 // ————— Init —————
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
-    setupAriaStructure();
-    setupTabKeyboardNav();
+    loadUnits();
+    Object.keys(recipes).forEach(k => { scales[k] = 1; });
+    buildNav();
+    wireEvents();
 
-    // Priority: shared deep link in the URL, then last viewed tab, then default
+    // Priority: shared deep link in the URL, then last viewed category, then the first one
     let lastTab = null;
     try { lastTab = localStorage.getItem(STORAGE_KEY_LASTTAB); } catch(_){}
-    if (applyLocationHash()){
-        // handled by the hash
-    } else if (lastTab && tabOrder.includes(lastTab)){
-        const btn = document.querySelector(`.tab[data-tab="${lastTab}"]`);
-        if (btn) switchTab(lastTab, btn);
-    } else {
-        const firstContent = document.querySelector('.sub-content.active .recipe-content');
-        if (firstContent) {
-            const recipeKey = firstContent.dataset.recipe;
-            renderRecipe(recipeKey, firstContent);
-        }
+    if (!applyLocationHash()){
+        showCategory(CATEGORIES.some(c => c.id === lastTab) ? lastTab : CATEGORIES[0].id);
     }
 });
 </script>
